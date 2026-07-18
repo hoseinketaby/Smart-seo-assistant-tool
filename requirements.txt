@@ -1,0 +1,14 @@
+flask
+flask-sqlalchemy
+flask-login
+python-dotenv
+validators
+
+# for the summarizer tab (step 6) - kept from the original app
+langchain-openai
+langchain-classic
+langchain-community
+langchain-core
+langchain-text-splitters
+unstructured
+youtube-transcript-api

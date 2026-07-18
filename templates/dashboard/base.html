@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar: tab navigation -->
+    <aside class="sidebar">
+      <h2>🔎 دستیار SEO</h2>
+
+      <nav class="tab-nav">
+        {% for tab in tabs %}
+          <a href="{{ url_for('dashboard.overview', tab=tab.key) }}"
+             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="user-email">{{ user.email }}</p>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج از حساب</a>
+      </div>
+    </aside>
+
+    <!-- Main content: active tab -->
+    <main class="main">
+      <h1>
+        <span class="tab-icon">{{ active_tab_info.icon }}</span>
+        <span>{{ active_tab_info.label }}</span>
+      </h1>
+
+      <div class="tab-placeholder">
+        <p>{{ active_tab_info.placeholder }}</p>
+      </div>
+    </main>
+
+  </div>
+</body>
+</html>
