@@ -38,7 +38,8 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
-        login_user(user)
+        # Log the user in and remember the session so they don't need to re-login
+        login_user(user, remember=True)
         return redirect(url_for("dashboard.overview"))
 
     return render_template("signup.html", email="")
@@ -52,17 +53,19 @@ def login():
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
         password = request.form.get("password") or ""
+        remember = bool(request.form.get("remember"))
 
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password):
-            login_user(user)
+            login_user(user, remember=remember)
             next_page = request.args.get("next")
             return redirect(next_page or url_for("dashboard.overview"))
 
         flash("ایمیل یا رمز عبور اشتباه است.", "error")
-        return render_template("login.html", email=email)
+        return render_template("login.html", email=email, remember=remember)
 
-    return render_template("login.html", email="")
+    # GET
+    return render_template("login.html", email="", remember=False)
 
 
 @auth_bp.route("/logout")
