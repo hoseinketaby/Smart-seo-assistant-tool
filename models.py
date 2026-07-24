@@ -2,8 +2,10 @@ from datetime import datetime, timezone
 from flask_login import UserMixin
 from extensions import db
 
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
+
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -11,32 +13,25 @@ class User(UserMixin, db.Model):
 
     analyses = db.relationship("Analysis", backref="user", lazy=True, cascade="all, delete-orphan")
     keyword_searches = db.relationship("KeywordSearch", backref="user", lazy=True, cascade="all, delete-orphan")
-    api_keys = db.relationship("APIKey", backref="user", lazy=True, cascade="all, delete-orphan")
+
 
 class Analysis(db.Model):
     __tablename__ = "analyses"
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    url = db.Column(db.String(2048), nullable=True)
+    url = db.Column(db.String(2048), nullable=False)
     seo_score = db.Column(db.Integer)
     extracted_data = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+
 class KeywordSearch(db.Model):
     __tablename__ = "keyword_searches"
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     keyword = db.Column(db.String(255), nullable=False)
-    source = db.Column(db.String(20), nullable=False)
+    source = db.Column(db.String(20), nullable=False)  # 'youtube' | 'google'
     results = db.Column(db.JSON)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-class APIKey(db.Model):
-    __tablename__ = "api_keys"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    provider = db.Column(db.String(50), nullable=False)  # e.g., 'openai'
-    api_key = db.Column(db.String(2048), nullable=False)
-    base_url = db.Column(db.String(2048), nullable=True)
-    selected = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
