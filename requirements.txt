@@ -4,7 +4,7 @@ flask-login
 python-dotenv
 validators
 
-# for the summarizer tab (step 6) - kept from the original app
+gunicorn
 langchain-openai
 langchain-classic
 langchain-community
