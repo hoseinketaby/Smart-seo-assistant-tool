@@ -37,7 +37,101 @@
       </h1>
 
       <div class="tab-placeholder">
-        <p>{{ active_tab_info.placeholder }}</p>
+
+        {# If content-analyzer tab is active, show the input selector and fields #}
+        {% if active_tab == "content-analyzer" %}
+
+          <section class="content-analyzer">
+            <form id="content-analyzer-form">
+              <p>روش ورودی محتوا را انتخاب کنید:</p>
+
+              <label>
+                <input type="radio" name="input_mode" value="paste" checked>
+                الصاق (Paste) متن محتوا
+              </label>
+              <label>
+                <input type="radio" name="input_mode" value="url">
+                لینک صفحه (URL)
+              </label>
+
+              <div id="input-paste" class="input-block">
+                <label for="paste-content">متن یا HTML را اینجا پیست کنید</label>
+                <textarea id="paste-content" name="paste_content" rows="10" placeholder="متن یا HTML را وارد کنید..."></textarea>
+              </div>
+
+              <div id="input-url" class="input-block" style="display: none;">
+                <label for="page-url">آدرس صفحه (URL)</label>
+                <input type="url" id="page-url" name="page_url" placeholder="https://example.com/page" />
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="primary">تحلیل</button>
+                <button type="button" id="clear-content">پاک کردن</button>
+              </div>
+
+              <p class="hint">توجه: در حال حاضر این فرم فقط سمت کاربر است؛ برای ارسال به سرور یک route مانند /analyze نیاز است که بعداً اضافه می‌کنم.</p>
+            </form>
+
+            <div id="analysis-result" style="margin-top:1rem;"></div>
+          </section>
+
+          <script>
+            (function () {
+              const form = document.getElementById('content-analyzer-form');
+              const pasteBlock = document.getElementById('input-paste');
+              const urlBlock = document.getElementById('input-url');
+              const radios = form.querySelectorAll('input[name="input_mode"]');
+              const resultDiv = document.getElementById('analysis-result');
+              const clearBtn = document.getElementById('clear-content');
+
+              function updateVisibility() {
+                const mode = form.querySelector('input[name="input_mode"]:checked').value;
+                if (mode === 'paste') {
+                  pasteBlock.style.display = '';
+                  urlBlock.style.display = 'none';
+                } else {
+                  pasteBlock.style.display = 'none';
+                  urlBlock.style.display = '';
+                }
+              }
+
+              radios.forEach(r => r.addEventListener('change', updateVisibility));
+              clearBtn.addEventListener('click', () => {
+                form.querySelector('#paste-content').value = '';
+                form.querySelector('#page-url').value = '';
+                resultDiv.innerHTML = '';
+              });
+
+              form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const mode = form.querySelector('input[name="input_mode"]:checked').value;
+                if (mode === 'paste') {
+                  const text = form.querySelector('#paste-content').value.trim();
+                  if (!text) {
+                    resultDiv.innerHTML = '<div class="status error">لطفاً متن را وارد کنید.</div>';
+                    return;
+                  }
+                  // فعلاً فقط نمایش می‌دهیم؛ بعداً اینجا fetch به سرور خواهیم زد.
+                  resultDiv.innerHTML = '<div class="status">دریافت شد: متن با طول ' + text.length + ' کاراکتر</div>';
+                } else {
+                  const url = form.querySelector('#page-url').value.trim();
+                  if (!url) {
+                    resultDiv.innerHTML = '<div class="status error">لطفاً یک URL معتبر وارد کنید.</div>';
+                    return;
+                  }
+                  resultDiv.innerHTML = '<div class="status">دریافت شد: ' + url + '</div>';
+                }
+              });
+
+              // init
+              updateVisibility();
+            })();
+          </script>
+
+        {% else %}
+          <p>{{ active_tab_info.placeholder }}</p>
+        {% endif %}
+
       </div>
     </main>
 
