@@ -13,7 +13,13 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me-in-production")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///app.db")
+
+    # اصلاح فرمت آدرس دیتابیس برای Render (سازگاری با PostgreSQL و SQLite)
+    db_url = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
@@ -29,16 +35,17 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(model_config_bp)  # ثبت بلوپرینت مدیریت API Keyها
+    app.register_blueprint(model_config_bp)
 
     with app.app_context():
         db.create_all()
-        # مایگریشن خودکار: اضافه کردن ستون is_active اگر در دیتابیس موجود نباشد (جلوگیری از خطای ۵۰۰)
-        try:
-            db.session.execute(text("ALTER TABLE model_entries ADD COLUMN is_active BOOLEAN DEFAULT 0;"))
-            db.session.commit()
-        except Exception:
-            db.session.rollback()  # اگر ستون قبلاً وجود داشت، خطایی رخ ندهد
+        # مایگریشن خودکار فقط برای SQLite جهت جلوگیری از خطای 500
+        if "sqlite" in app.config["SQLALCHEMY_DATABASE_URI"]:
+            try:
+                db.session.execute(text("ALTER TABLE model_entries ADD COLUMN is_active BOOLEAN DEFAULT 0;"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     @app.route("/")
     def index():
