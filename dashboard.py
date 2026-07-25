@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 
 from youtube_service import search_youtube_videos, summarize_youtube_video_text
+from google_service import search_duckduckgo, search_google_html
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -14,7 +15,10 @@ TABS = [
      "placeholder": ""},
     {"key": "google-research", "label": "مقالات گوگل", "icon": "🔍",
      "endpoint": "dashboard.overview", "params": {"tab": "google-research"},
-     "placeholder": "این بخش برترین مقالات گوگل را بر اساس کلمه کلیدی پیدا می‌کند - به‌زودی."},
+     "placeholder": ""},
+    {"key": "duckduckgo-research", "label": "جستجو با DuckDuckGo", "icon": "🦆",
+     "endpoint": "dashboard.overview", "params": {"tab": "duckduckgo-research"},
+     "placeholder": ""},
     {"key": "summarizer", "label": "خلاصه‌ساز", "icon": "📝",
      "endpoint": "dashboard.overview", "params": {"tab": "summarizer"},
      "placeholder": "این بخش همان خلاصه‌ساز محتوای وب/یوتیوب موجود است - در مرحله بعد منتقل می‌شود."},
@@ -40,14 +44,19 @@ def overview(tab="content-analyzer"):
     yt_videos = []
     google_results = []
     google_query = request.args.get("gq", "").strip()
+    duckduckgo_results = []
+    duckduckgo_query = request.args.get("dq", "").strip()
 
     if tab == "youtube-research":
-        # اگر query خالی بود، ویدیوهای پرطرفدار نمایش داده می‌شوند
         yt_videos = search_youtube_videos(yt_query, max_results=10)
     
     elif tab == "google-research":
-        # برای گوگل هم اگر query خالی بود، نتایج پرطرفدار نمایش داده می‌شوند
-        google_results = search_google_articles(google_query, max_results=10)
+        # روش دوم: جستجوی مستقیم گوگل (ممکن است محدود شود)
+        google_results = search_google_html(google_query, max_results=10)
+    
+    elif tab == "duckduckgo-research":
+        # روش اول: جستجوی DuckDuckGo (پایدارتر)
+        duckduckgo_results = search_duckduckgo(duckduckgo_query, max_results=10)
 
     return render_template(
         "dashboard/base.html",
@@ -59,6 +68,8 @@ def overview(tab="content-analyzer"):
         yt_query=yt_query,
         google_results=google_results,
         google_query=google_query,
+        duckduckgo_results=duckduckgo_results,
+        duckduckgo_query=duckduckgo_query,
     )
 
 
@@ -73,20 +84,3 @@ def summarize_youtube():
 
     summary = summarize_youtube_video_text(video_id, current_user)
     return jsonify({"summary": summary})
-
-
-def search_google_articles(query: str, max_results: int = 10):
-    """
-    جستجوی مقالات در گوگل بدون نیاز به API key
-    این تابع باید با استفاده از روش‌های scraping یا سرویس‌های جایگزین پیاده‌سازی شود
-    """
-    # TODO: پیاده‌سازی جستجوی گوگل بدون API key
-    # می‌توان از کتابخانه‌هایی مانند requests-html یا selenium استفاده کرد
-    # یا از سرویس‌های جایگزین مانند DuckDuckGo استفاده کرد
-    
-    if not query:
-        # TODO: دریافت مقالات پرطرفدار یا پربازدید گوگل
-        return []
-    
-    # TODO: پیاده‌سازی جستجو با query
-    return []
