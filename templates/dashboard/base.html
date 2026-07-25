@@ -1,32 +1,258 @@
-<!-- داخل تب youtube-research -->
-<div class="yt-search-box">
-  <input type="text" id="yt-query" placeholder="جستجو در یوتیوب..." value="{{ yt_query }}">
-  <button onclick="ytSearch()">جستجو</button>
-</div>
-<div id="yt-results" class="video-grid">
-  {% include "dashboard/_yt_video_cards.html" %} <!-- یا هر ساختاری که الان دارید -->
-</div>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  
+  <!-- اضافه کردن Bootstrap برای استایل بهتر -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- اضافه کردن Font Awesome برای آیکون‌ها -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="layout">
 
-<script>
-function renderYtVideos(videos) {
-  const container = document.getElementById('yt-results');
-  container.innerHTML = videos.map(v => `
-    <div class="video-card">
-      <img src="${v.thumbnail}" alt="${v.title}">
-      <h4>${v.title}</h4>
-      <span>${v.channel} · ${v.duration}</span>
+    <!-- Sidebar: tab navigation -->
+    <aside class="sidebar dashboard-sidebar">
+      <h2>🔎 دستیار SEO</h2>
+
+      <nav class="tab-nav">
+        {% for tab in tabs %}
+          <a href="{{ url_for(tab.endpoint, **tab.params) }}"
+             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
+
+      <div class="sidebar-footer">
+        <p class="user-email">{{ user.email }}</p>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج</a>
+      </div>
+    </aside>
+
+    <!-- Main content: active tab -->
+    <main class="main">
+      <h1>{{ active_tab_info.icon }} {{ active_tab_info.label }}</h1>
+
+      {% block tab_content %}
+        {% if active_tab == 'youtube-research' %}
+          <!-- بخش یوتیوب -->
+          <div class="youtube-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='youtube-research') }}" class="search-form">
+                <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                  <input type="text" 
+                         name="q" 
+                         class="form-control" 
+                         placeholder="جستجوی ویدیو در یوتیوب..." 
+                         value="{{ yt_query if yt_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- عنوان برترین ویدیوها -->
+            <div style="text-align: center; margin-bottom: 25px;">
+              {% if yt_query %}
+                <h3 style="color: #2c3e50;">نتایج جستجو برای: "{{ yt_query }}"</h3>
+              {% else %}
+                <h3 style="color: #2c3e50;">🔥 ۱۰ ویدیوی برتر یوتیوب</h3>
+                <p style="color: #7f8c8d; font-size: 14px;">پرطرفدارترین ویدیوهای امروز</p>
+              {% endif %}
+            </div>
+
+            <!-- نمایش نتایج ویدیوها -->
+            <div class="videos-grid">
+              {% if yt_videos %}
+                <div class="row">
+                  {% for video in yt_videos %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                      <div class="video-card" style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s; height: 100%; background: white;">
+                        <div class="video-thumbnail" style="position: relative; background: #000;">
+                          <img src="{{ video.thumbnail }}" alt="{{ video.title }}" loading="lazy" style="width: 100%; height: auto;">
+                          <span class="video-duration" style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">{{ video.duration }}</span>
+                        </div>
+                        <div class="video-info" style="padding: 12px;">
+                          <h5 class="video-title" style="font-size: 14px; font-weight: 600; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #212529;">{{ video.title }}</h5>
+                          <p class="video-channel" style="color: #6c757d; font-size: 13px; margin-bottom: 3px;">{{ video.channel }}</p>
+                          {% if video.views %}
+                            <p class="video-views" style="color: #adb5bd; font-size: 12px;"><i class="far fa-eye"></i> {{ video.views }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="video-actions" style="padding: 10px 12px; border-top: 1px solid #dee2e6; display: flex; gap: 5px;">
+                          <a href="{{ video.url }}" target="_blank" class="btn btn-outline-secondary btn-sm" style="flex: 1; font-size: 12px;">
+                            <i class="fab fa-youtube"></i> تماشا
+                          </a>
+                          <button class="btn btn-primary btn-sm summarize-btn" 
+                                  data-video-id="{{ video.video_id }}"
+                                  data-video-title="{{ video.title }}"
+                                  style="flex: 1; font-size: 12px;">
+                            <i class="fas fa-file-alt"></i> خلاصه‌سازی
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="no-results" style="text-align: center; padding: 40px; color: #6c757d;">
+                  <p>هیچ ویدیویی یافت نشد. لطفاً جستجوی دیگری انجام دهید.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        {% elif active_tab == 'google-research' %}
+          <!-- بخش گوگل -->
+          <div class="google-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='google-research') }}" class="search-form">
+                <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                  <input type="text" 
+                         name="gq" 
+                         class="form-control" 
+                         placeholder="جستجوی مقالات در گوگل..." 
+                         value="{{ google_query if google_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- عنوان برترین مقالات -->
+            <div style="text-align: center; margin-bottom: 25px;">
+              {% if google_query %}
+                <h3 style="color: #2c3e50;">نتایج جستجو برای: "{{ google_query }}"</h3>
+              {% else %}
+                <h3 style="color: #2c3e50;">🔥 ۱۰ مقاله برتر گوگل</h3>
+                <p style="color: #7f8c8d; font-size: 14px;">پرطرفدارترین مقالات امروز</p>
+              {% endif %}
+            </div>
+
+            <!-- نمایش نتایج مقالات گوگل -->
+            <div class="google-results">
+              {% if google_results %}
+                <!-- TODO: نمایش نتایج جستجوی گوگل -->
+                <div class="row">
+                  {% for result in google_results %}
+                    <div class="col-12 mb-3">
+                      <div class="card">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ result.title }}</h5>
+                          <p class="card-text">{{ result.snippet }}</p>
+                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt"></i> مطالعه
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tab-placeholder" style="text-align: center; padding: 40px;">
+                  <p>در حال حاضر بخش گوگل در حال پیاده‌سازی است...</p>
+                  <p style="color: #6c757d;">به زودی امکان جستجوی مقالات گوگل فراهم خواهد شد.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        {% else %}
+          <!-- سایر تب‌ها -->
+          <div class="tab-placeholder">
+            <p>{{ active_tab_info.placeholder }}</p>
+          </div>
+        {% endif %}
+      {% endblock %}
+    </main>
+
+  </div>
+
+  <!-- مودال نمایش خلاصه -->
+  <div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-file-alt"></i> خلاصه ویدیو</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="summaryContent">
+          <div class="loading-spinner" style="text-align: center; padding: 30px; color: #6c757d;">در حال پردازش...</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+        </div>
+      </div>
     </div>
-  `).join('');
-}
+  </div>
 
-async function ytSearch() {
-  const q = document.getElementById('yt-query').value;
-  const res = await fetch(`/dashboard/youtube/search?q=${encodeURIComponent(q)}`);
-  const data = await res.json();
-  renderYtVideos(data.videos);
-}
-
-document.getElementById('yt-query').addEventListener('keypress', e => {
-  if (e.key === 'Enter') ytSearch();
-});
-</script>
+  <!-- اسکریپت‌های مورد نیاز -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // رویداد برای دکمه‌های خلاصه‌سازی
+      document.querySelectorAll('.summarize-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const videoId = this.dataset.videoId;
+          const videoTitle = this.dataset.videoTitle;
+          
+          // نمایش مودال
+          const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+          modal.show();
+          
+          // نمایش متن بارگذاری
+          document.getElementById('summaryContent').innerHTML = 
+            `<div class="loading-spinner" style="text-align: center; padding: 30px; color: #6c757d;">در حال خلاصه‌سازی ویدیو "${videoTitle}"...</div>`;
+          
+          // ارسال درخواست به سرور
+          fetch('/dashboard/youtube/summarize', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ video_id: videoId }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              document.getElementById('summaryContent').innerHTML = 
+                `<div class="alert alert-danger">${data.error}</div>`;
+            } else {
+              // تبدیل خلاصه به HTML با حفظ خطوط و تیترها
+              const summaryHtml = data.summary
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .map(line => {
+                  if (line.startsWith('#')) {
+                    const level = line.match(/^#+/)[0].length;
+                    const text = line.replace(/^#+\s*/, '');
+                    return `<h${Math.min(level, 6)}>${text}</h${Math.min(level, 6)}>`;
+                  }
+                  return `<p>${line}</p>`;
+                })
+                .join('');
+              
+              document.getElementById('summaryContent').innerHTML = 
+                `<div class="summary-result" style="line-height: 1.8;">${summaryHtml}</div>`;
+            }
+          })
+          .catch(error => {
+            document.getElementById('summaryContent').innerHTML = 
+              `<div class="alert alert-danger">خطا در ارتباط با سرور: ${error.message}</div>`;
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
