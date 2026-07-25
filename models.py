@@ -11,27 +11,29 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    analyses = db.relationship("Analysis", backref="user", lazy=True, cascade="all, delete-orphan")
-    keyword_searches = db.relationship("KeywordSearch", backref="user", lazy=True, cascade="all, delete-orphan")
+    providers = db.relationship("Provider", backref="user", lazy=True, cascade="all, delete-orphan")
 
 
-class Analysis(db.Model):
-    __tablename__ = "analyses"
+class Provider(db.Model):
+    __tablename__ = "providers"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    url = db.Column(db.String(2048), nullable=False)
-    seo_score = db.Column(db.Integer)
-    extracted_data = db.Column(db.JSON)
+    name = db.Column(db.String(255), nullable=False)
+    preset_key = db.Column(db.String(50), nullable=False)
+    base_url = db.Column(db.String(512), nullable=True)
+    api_key_encrypted = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+    models = db.relationship("ModelEntry", backref="provider", lazy=True, cascade="all, delete-orphan")
 
-class KeywordSearch(db.Model):
-    __tablename__ = "keyword_searches"
+
+class ModelEntry(db.Model):
+    __tablename__ = "model_entries"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-    keyword = db.Column(db.String(255), nullable=False)
-    source = db.Column(db.String(20), nullable=False)  # 'youtube' | 'google'
-    results = db.Column(db.JSON)
+    provider_id = db.Column(db.Integer, db.ForeignKey("providers.id"), nullable=False, index=True)
+    model_id = db.Column(db.String(255), nullable=False)
+    display_name = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, default=False)  # مشخص‌کننده مدل فعال کاربر
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
