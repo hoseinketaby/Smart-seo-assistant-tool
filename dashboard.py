@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 
-from youtube_service import search_youtube_videos, summarize_youtube_video_text, get_trending_youtube_videos
+from youtube_service import search_youtube_videos, summarize_youtube_video_text
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -89,12 +89,4 @@ def search_google_articles(query: str, max_results: int = 10):
         return []
     
     # TODO: پیاده‌سازی جستجو با query
-    return []
-
-
-def get_trending_google_articles(max_results: int = 10):
-    """
-    دریافت مقالات پرطرفدار گوگل بدون نیاز به API key
-    """
-    # TODO: پیاده‌سازی دریافت مقالات پرطرفدار گوگل
     return []
