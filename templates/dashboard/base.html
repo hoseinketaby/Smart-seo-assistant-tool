@@ -1,202 +1,72 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>داشبورد — دستیار SEO</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد | {{ active_tab_info.label }}</title>
+    <!-- استفاده از بوت‌استرپ فارسی برای ظاهر بهتر -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { min-height: 100vh; background-color: #343a40; padding-top: 20px; }
+        .sidebar .nav-link { color: #adb5bd; padding: 12px 20px; border-radius: 5px; margin: 2px 10px; transition: 0.3s; }
+        .sidebar .nav-link:hover { background-color: #495057; color: #fff; }
+        .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; font-weight: bold; }
+        .content-area { padding: 40px; }
+    </style>
 </head>
 <body>
-  <div class="layout">
 
-    <!-- Sidebar: tab navigation -->
-    <aside class="sidebar">
-      <h2>🔎 دستیار SEO</h2>
-
-      <nav class="tab-nav">
-        {% for tab in tabs %}
-          <a href="{{ url_for('dashboard.overview', tab=tab.key) }}"
-             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
-            <span class="tab-icon">{{ tab.icon }}</span>
-            <span class="tab-label">{{ tab.label }}</span>
-          </a>
-        {% endfor %}
-      </nav>
-
-      <div class="sidebar-footer">
-        <p class="user-email">{{ user.email }}</p>
-        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج از حساب</a>
-      </div>
-    </aside>
-
-    <!-- Main content: active tab -->
-    <main class="main">
-      <h1>
-        <span class="tab-icon">{{ active_tab_info.icon }}</span>
-        <span>{{ active_tab_info.label }}</span>
-      </h1>
-
-      <div class="tab-placeholder">
-
-        {# If content-analyzer tab is active, show the input selector and fields #}
-        {% if active_tab == "content-analyzer" %}
-
-          <section class="content-analyzer">
-            <form id="content-analyzer-form">
-              <p>روش ورودی محتوا را انتخاب کنید:</p>
-
-              <label for="input-mode-select" style="display:block; margin-top:0.5rem; text-align:right; color:var(--text-muted);">نوع ورودی</label>
-              <select id="input-mode-select" name="input_mode" style="padding:0.6rem 0.75rem; border-radius:8px; background:var(--bg-sidebar); color:var(--text-main); border:1px solid var(--border-color);">
-                <option value="write">می‌خواهم خودم متن را بنویسم</option>
-                <option value="url">از لینک صفحه وبلاگ بارگذاری و ویرایش کنم</option>
-              </select>
-
-              <div id="write-block" class="input-block" style="margin-top:1rem;">
-                <label for="write-content">متن را اینجا بنویسید</label>
-                <textarea id="write-content" name="write_content" rows="12" placeholder="متن خود را اینجا بنویسید..." style="width:100%; margin-top:0.5rem; padding:0.75rem; border-radius:8px; background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main);"></textarea>
-              </div>
-
-              <div id="url-block" class="input-block" style="display:none; margin-top:1rem;">
-                <label for="page-url">آدرس صفحه (URL)</label>
-                <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                  <input type="url" id="page-url" name="page_url" placeholder="https://example.com/page" style="flex:1; padding:0.6rem 0.75rem; border-radius:8px; background:var(--bg-sidebar); color:var(--text-main); border:1px solid var(--border-color);" />
-                  <button type="button" id="load-url" class="auth-btn">بارگذاری و ویرایش</button>
+    <div class="container-fluid">
+        <div class="row">
+            
+            <!-- سایدبار (منوی تب‌ها) -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar">
+                <div class="text-center text-white mb-4">
+                    <h5>پنل کاربری</h5>
+                    <small class="text-muted">{{ user.email }}</small>
                 </div>
-
-                <div id="fetched-editor" style="display:none; margin-top:1rem;">
-                  <label for="fetched-content">متن صفحه (قابل ویرایش)</label>
-                  <textarea id="fetched-content" name="fetched_content" rows="12" placeholder="متن صفحه پس از بارگذاری اینجا نمایش داده می‌شود..." style="width:100%; margin-top:0.5rem; padding:0.75rem; border-radius:8px; background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main);"></textarea>
+                <nav class="nav flex-column">
+                    {% for tab in tabs %}
+                        <!-- رفع باگ: استفاده دقیق از url_for و tab.key برای لینک دهی صحیح -->
+                        <a class="nav-link {% if tab.key == active_tab %}active{% endif %}" 
+                           href="{{ url_for('dashboard.overview', tab=tab.key) }}">
+                            {{ tab.icon }} {{ tab.label }}
+                        </a>
+                    {% endfor %}
+                </nav>
+                <hr class="border-secondary mx-3 my-4">
+                <div class="text-center px-3">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100">خروج از حساب</a>
                 </div>
+            </div>
 
-                <p class="hint" style="margin-top:0.75rem; color:var(--text-muted);">توجه: برای بارگذاری خودکار محتوا از URL نیاز است یک مسیر سرور (route) که محتوای صفحه را واکشی و متن را استخراج کند وجود داشته باشد. اگر مسیر سرور موجود نباشد، می‌توانید URL را وارد کرده و متن را خودتان در بخش ویرایشگر پیست کنید.</p>
-              </div>
+            <!-- بخش محتوای اصلی -->
+            <div class="col-md-9 col-lg-10 content-area">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="mb-4">{{ active_tab_info.icon }} {{ active_tab_info.label }}</h2>
+                        <p class="text-muted">{{ active_tab_info.placeholder }}</p>
+                        
+                        <!-- نمایش پیام‌های فلش (اخطارها و موفقیت‌ها) -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
 
-              <div class="form-actions" style="margin-top:1rem; display:flex; gap:0.75rem; justify-content:flex-end;">
-                <button type="submit" class="auth-btn">تحلیل محتوا</button>
-                <button type="button" id="clear-content" class="" style="background:transparent; border:1px solid var(--border-color); padding:0.6rem 0.75rem; border-radius:8px; color:var(--text-muted);">پاک کردن</button>
-              </div>
+                    </div>
+                </div>
+            </div>
 
-              <div id="analysis-result" style="margin-top:1rem;"></div>
-            </form>
-          </section>
+        </div>
+    </div>
 
-          <script>
-            (function () {
-              const select = document.getElementById('input-mode-select');
-              const writeBlock = document.getElementById('write-block');
-              const urlBlock = document.getElementById('url-block');
-              const loadBtn = document.getElementById('load-url');
-              const fetchedEditor = document.getElementById('fetched-editor');
-              const fetchedContent = document.getElementById('fetched-content');
-              const writeContent = document.getElementById('write-content');
-              const form = document.getElementById('content-analyzer-form');
-              const resultDiv = document.getElementById('analysis-result');
-              const clearBtn = document.getElementById('clear-content');
-
-              function updateVisibility() {
-                const mode = select.value;
-                if (mode === 'write') {
-                  writeBlock.style.display = '';
-                  urlBlock.style.display = 'none';
-                } else {
-                  writeBlock.style.display = 'none';
-                  urlBlock.style.display = '';
-                }
-                resultDiv.innerHTML = '';
-              }
-
-              select.addEventListener('change', updateVisibility);
-
-              clearBtn.addEventListener('click', () => {
-                writeContent.value = '';
-                document.getElementById('page-url').value = '';
-                if (fetchedContent) fetchedContent.value = '';
-                fetchedEditor.style.display = 'none';
-                resultDiv.innerHTML = '';
-              });
-
-              // Try to fetch URL content from backend route and populate editor
-              loadBtn.addEventListener('click', async () => {
-                const url = document.getElementById('page-url').value.trim();
-                resultDiv.innerHTML = '';
-                if (!url) {
-                  resultDiv.innerHTML = '<div class="status error">لطفاً یک URL معتبر وارد کنید.</div>';
-                  return;
-                }
-
-                // Call backend route to fetch and extract page text.
-                // NOTE: backend route must be implemented (e.g., POST /dashboard/fetch) to support this.
-                try {
-                  loadBtn.disabled = true;
-                  loadBtn.textContent = 'در حال بارگذاری...';
-
-                  const res = await fetch('/dashboard/fetch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                  });
-
-                  if (!res.ok) {
-                    const txt = await res.text();
-                    resultDiv.innerHTML = '<div class="status error">خطا در واکشی محتوا: ' + res.status + ' ' + txt + '</div>';
-                    fetchedEditor.style.display = 'none';
-                    return;
-                  }
-
-                  const data = await res.json();
-                  const text = data.text || '';
-                  fetchedContent.value = text;
-                  fetchedEditor.style.display = '';
-                  resultDiv.innerHTML = '<div class="status success">محتوا با موفقیت بارگذاری شد. اکنون می‌توانید آن را ویرایش کنید.</div>';
-
-                } catch (err) {
-                  resultDiv.innerHTML = '<div class="status error">خطا در درخواست: ' + (err.message || err) + '</div>';
-                  fetchedEditor.style.display = 'none';
-                } finally {
-                  loadBtn.disabled = false;
-                  loadBtn.textContent = 'بارگذاری و ویرایش';
-                }
-              });
-
-              // Submit handler (for now, just show what would be sent)
-              form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const mode = select.value;
-                let payload = {};
-                if (mode === 'write') {
-                  const text = writeContent.value.trim();
-                  if (!text) {
-                    resultDiv.innerHTML = '<div class="status error">لطفاً متن را وارد کنید.</div>';
-                    return;
-                  }
-                  payload = { mode: 'write', text };
-                } else {
-                  // URL mode: prefer edited fetched content, fall back to manual paste
-                  const edited = fetchedContent ? fetchedContent.value.trim() : '';
-                  const url = document.getElementById('page-url').value.trim();
-                  if (!edited && !url) {
-                    resultDiv.innerHTML = '<div class="status error">لطفاً ابتدا URL را وارد کنید و محتوا را بارگذاری یا دستی وارد کنید.</div>';
-                    return;
-                  }
-                  payload = { mode: 'url', url, text: edited };
-                }
-
-                // نمایش پیش‌نمایش؛ بعداً اینجا fetch به مسیر آنالیز واقعی اضافه می‌شود.
-                resultDiv.innerHTML = '<div class="status">درخواست آماده شد. حالت: ' + payload.mode + ' — طول متن: ' + (payload.text ? payload.text.length : 0) + ' کاراکتر</div>';
-              });
-
-              // init
-              updateVisibility();
-            })();
-          </script>
-
-        {% else %}
-          <p>{{ active_tab_info.placeholder }}</p>
-        {% endif %}
-
-      </div>
-    </main>
-
-  </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
