@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 
 from youtube_service import search_youtube_videos, summarize_youtube_video_text
 from google_service import search_duckduckgo, search_google_html
+from summarizer_service import summarize_article
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -83,4 +84,21 @@ def summarize_youtube():
         return jsonify({"error": "شناسه ویدیو ارسال نشده است."}), 400
 
     summary = summarize_youtube_video_text(video_id, current_user)
+    return jsonify({"summary": summary})
+
+
+@dashboard_bp.route("/dashboard/article/summarize", methods=["POST"])
+@login_required
+def summarize_article_route():
+    """
+    خلاصه‌سازی مقالات وب
+    """
+    data = request.get_json() or {}
+    url = data.get("url")
+    title = data.get("title", "مقاله")
+
+    if not url:
+        return jsonify({"error": "لینک مقاله ارسال نشده است."}), 400
+
+    summary = summarize_article(url, title, current_user)
     return jsonify({"summary": summary})
