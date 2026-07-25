@@ -1,72 +1,45 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>داشبورد | {{ active_tab_info.label }}</title>
-    <!-- استفاده از بوت‌استرپ فارسی برای ظاهر بهتر -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .sidebar { min-height: 100vh; background-color: #343a40; padding-top: 20px; }
-        .sidebar .nav-link { color: #adb5bd; padding: 12px 20px; border-radius: 5px; margin: 2px 10px; transition: 0.3s; }
-        .sidebar .nav-link:hover { background-color: #495057; color: #fff; }
-        .sidebar .nav-link.active { background-color: #0d6efd; color: #fff; font-weight: bold; }
-        .content-area { padding: 40px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <div class="layout">
 
-    <div class="container-fluid">
-        <div class="row">
-            
-            <!-- سایدبار (منوی تب‌ها) -->
-            <div class="col-md-3 col-lg-2 px-0 sidebar">
-                <div class="text-center text-white mb-4">
-                    <h5>پنل کاربری</h5>
-                    <small class="text-muted">{{ user.email }}</small>
-                </div>
-                <nav class="nav flex-column">
-                    {% for tab in tabs %}
-                        <!-- رفع باگ: استفاده دقیق از url_for و tab.key برای لینک دهی صحیح -->
-                        <a class="nav-link {% if tab.key == active_tab %}active{% endif %}" 
-                           href="{{ url_for('dashboard.overview', tab=tab.key) }}">
-                            {{ tab.icon }} {{ tab.label }}
-                        </a>
-                    {% endfor %}
-                </nav>
-                <hr class="border-secondary mx-3 my-4">
-                <div class="text-center px-3">
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger btn-sm w-100">خروج از حساب</a>
-                </div>
-            </div>
+    <!-- Sidebar: tab navigation -->
+    <aside class="sidebar dashboard-sidebar">
+      <h2>🔎 دستیار SEO</h2>
 
-            <!-- بخش محتوای اصلی -->
-            <div class="col-md-9 col-lg-10 content-area">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h2 class="mb-4">{{ active_tab_info.icon }} {{ active_tab_info.label }}</h2>
-                        <p class="text-muted">{{ active_tab_info.placeholder }}</p>
-                        
-                        <!-- نمایش پیام‌های فلش (اخطارها و موفقیت‌ها) -->
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
+      <nav class="tab-nav">
+        {% for tab in tabs %}
+          <a href="{{ url_for(tab.endpoint, **tab.params) }}"
+             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
 
-                    </div>
-                </div>
-            </div>
+      <div class="sidebar-footer">
+        <p class="user-email">{{ user.email }}</p>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج</a>
+      </div>
+    </aside>
 
-        </div>
-    </div>
+    <!-- Main content: active tab -->
+    <main class="main">
+      <h1>{{ active_tab_info.icon }} {{ active_tab_info.label }}</h1>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      {% block tab_content %}
+      <div class="tab-placeholder">
+        <p>{{ active_tab_info.placeholder }}</p>
+      </div>
+      {% endblock %}
+    </main>
+
+  </div>
 </body>
 </html>
