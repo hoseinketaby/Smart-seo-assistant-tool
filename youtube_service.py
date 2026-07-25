@@ -10,9 +10,89 @@ from models import Provider, ModelEntry
 from crypto_utils import decrypt_value
 
 
+def get_trending_youtube_videos(max_results: int = 10):
+    """دریافت ویدیوهای پرطرفدار یوتیوب بدون نیاز به API key"""
+    # استفاده از صفحه اصلی یوتیوب برای دریافت ویدیوهای پرطرفدار
+    url = "https://www.youtube.com/"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7",
+    }
+    
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            html = response.read().decode("utf-8")
+        
+        # استخراج داده‌های اولیه
+        match = re.search(r"var ytInitialData = ({.*?});</script>", html)
+        if not match:
+            match = re.search(r"window\[\"ytInitialData\"\] = ({.*?});", html)
+        
+        if not match:
+            return []
+        
+        data = json.loads(match.group(1))
+        videos = []
+        
+        # دریافت ویدیوهای از بخش trending
+        contents = data.get("contents", {}).get("twoColumnBrowseResultsRenderer", {}).get("tabs", [])
+        
+        for tab in contents:
+            if tab.get("tabRenderer", {}).get("title") == "Trending":
+                tab_content = tab.get("tabRenderer", {}).get("content", {})
+                section_list = tab_content.get("sectionListRenderer", {}).get("contents", [])
+                
+                for section in section_list:
+                    item_section = section.get("itemSectionRenderer", {})
+                    for item in item_section.get("contents", []):
+                        video = item.get("videoRenderer")
+                        if not video:
+                            continue
+                        
+                        video_id = video.get("videoId")
+                        title_runs = video.get("title", {}).get("runs", [])
+                        title = title_runs[0].get("text", "") if title_runs else ""
+                        
+                        owner_runs = video.get("ownerText", {}).get("runs", [])
+                        channel_name = owner_runs[0].get("text", "") if owner_runs else "یوتیوب"
+                        
+                        length_text = video.get("lengthText", {}).get("simpleText", "نامشخص")
+                        thumbnails = video.get("thumbnail", {}).get("thumbnails", [])
+                        thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+                        
+                        # دریافت تعداد بازدید (تقریبی)
+                        views_text = video.get("viewCountText", {}).get("simpleText", "")
+                        
+                        if video_id and title:
+                            videos.append({
+                                "video_id": video_id,
+                                "title": title,
+                                "channel": channel_name,
+                                "duration": length_text,
+                                "thumbnail": thumbnail_url,
+                                "url": f"https://www.youtube.com/watch?v={video_id}",
+                                "views": views_text,
+                            })
+                        
+                        if len(videos) >= max_results:
+                            break
+                    
+                    if len(videos) >= max_results:
+                        break
+                
+                break
+        
+        return videos
+    except Exception as e:
+        print(f"Error fetching trending videos: {e}")
+        return []
+
+
 def search_youtube_videos(query: str, max_results: int = 10):
     if not query:
-        query = "آموزش سئو"
+        return get_trending_youtube_videos(max_results)
 
     encoded_query = urllib.parse.quote(query)
     url = f"https://www.youtube.com/results?search_query={encoded_query}"
@@ -62,6 +142,9 @@ def search_youtube_videos(query: str, max_results: int = 10):
                 length_text = video_data.get("lengthText", {}).get("simpleText", "نامشخص")
                 thumbnails = video_data.get("thumbnail", {}).get("thumbnails", [])
                 thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+                
+                # دریافت تعداد بازدید (تقریبی)
+                views_text = video_data.get("viewCountText", {}).get("simpleText", "")
 
                 if video_id and title:
                     videos.append({
@@ -71,6 +154,7 @@ def search_youtube_videos(query: str, max_results: int = 10):
                         "duration": length_text,
                         "thumbnail": thumbnail_url,
                         "url": f"https://www.youtube.com/watch?v={video_id}",
+                        "views": views_text,
                     })
 
                 if len(videos) >= max_results:
