@@ -7,54 +7,32 @@ from crypto_utils import encrypt_value
 
 model_config_bp = Blueprint("model_config", __name__, url_prefix="/dashboard/models")
 
-# Known providers. 'base_url' is None for providers not yet confirmed or
-# not compatible with the simple api_key+base_url pattern - see 'supported'
-# and 'warning' for those.
 PROVIDER_PRESETS = {
     "gapgpt": {
         "label": "گپ‌جی‌پی‌تی (GapGPT)",
         "base_url": "https://api.gapgpt.app/v1",
         "custom_base_url": False,
         "supported": True,
-        "model_hint": "شناسه مدل را طبق مستندات GapGPT وارد کنید، مثلاً claude-fable-5",
+        "model_hint": "شناسه مدل را طبق مستندات GapGPT وارد کنید، مثلاً claude-fable-5 یا gpt-4o-mini",
     },
     "avalai": {
         "label": "اول‌ای‌آی (AvalAI)",
-        "base_url": "",  # intentionally empty per request - to be filled in later
+        "base_url": "https://api.avalai.ir/v1",
         "custom_base_url": False,
         "supported": True,
-        "model_hint": "base_url هنوز نهایی نشده؛ فعلاً خالی ذخیره می‌شود تا بعداً تکمیل شود.",
+        "model_hint": "شناسه مدل‌های پشتیبانی شده AvalAI را وارد کنید.",
     },
     "openrouter": {
         "label": "اوپن‌روتر (OpenRouter)",
         "base_url": "https://openrouter.ai/api/v1",
         "custom_base_url": False,
         "supported": True,
-        "model_hint": "شناسه مدل باید به فرمت provider/model باشد، مثلاً openai/gpt-4o یا anthropic/claude-sonnet-4",
-    },
-    "crewai": {
-        "label": "CrewAI",
-        "base_url": None,
-        "custom_base_url": False,
-        "supported": False,
-        "warning": "CrewAI یک فریم‌ورک اجرای Agent است، نه یک ارائه‌دهنده API با base_url مستقل - "
-                   "خودش از طریق ارائه‌دهنده‌های دیگر (OpenAI, Anthropic, ...) کار می‌کند. "
-                   "افزودن آن با این فرم در حال حاضر پشتیبانی نمی‌شود.",
-    },
-    "aws": {
-        "label": "AWS (Bedrock)",
-        "base_url": None,
-        "custom_base_url": False,
-        "supported": False,
-        "warning": "AWS Bedrock به‌جای یک API key ساده از access_key_id + secret_access_key + region "
-                   "استفاده می‌کند و با این فرم سازگار نیست. نیاز به پیاده‌سازی جداگانه دارد.",
+        "model_hint": "شناسه مدل به فرمت provider/model باشد، مثلاً openai/gpt-4o-mini",
     },
 }
 
 
 def _sidebar_context(active_tab="api-keys"):
-    """Shared context so this blueprint's pages render inside the same
-    dashboard shell (sidebar/tabs) as dashboard.py's tabs."""
     from dashboard import TABS, TABS_BY_KEY
     return {
         "tabs": TABS,
@@ -94,21 +72,11 @@ def add_provider():
 
     preset = PROVIDER_PRESETS[preset_key]
 
-    if not preset.get("supported", True):
-        flash(preset["warning"], "error")
-        return redirect(url_for("model_config.index"))
-
     if not name or not api_key:
         flash("نام و API key الزامی است.", "error")
         return redirect(url_for("model_config.index"))
 
-    if preset["custom_base_url"]:
-        if not custom_base_url:
-            flash("برای ارائه‌دهنده سفارشی، وارد کردن base URL الزامی است.", "error")
-            return redirect(url_for("model_config.index"))
-        base_url = custom_base_url
-    else:
-        base_url = preset["base_url"]
+    base_url = custom_base_url if preset.get("custom_base_url") else preset.get("base_url")
 
     provider = Provider(
         user_id=current_user.id,
@@ -152,10 +120,37 @@ def add_model(provider_id):
         flash("شناسه مدل الزامی است.", "error")
         return redirect(url_for("model_config.index"))
 
-    entry = ModelEntry(provider_id=provider.id, model_id=model_id, display_name=display_name)
+    # اگر این اولین مدل کاربر است، به‌صورت خودکار فعال شود
+    user_models_count = ModelEntry.query.join(Provider).filter(Provider.user_id == current_user.id).count()
+    is_active = (user_models_count == 0)
+
+    entry = ModelEntry(provider_id=provider.id, model_id=model_id, display_name=display_name, is_active=is_active)
     db.session.add(entry)
     db.session.commit()
-    flash(f"مدل «{display_name}» به «{provider.name}» اضافه شد.", "info")
+    flash(f"مدل «{display_name}» اضافه شد.", "info")
+    return redirect(url_for("model_config.index"))
+
+
+@model_config_bp.route("/models/<int:model_id>/activate", methods=["POST"])
+@login_required
+def activate_model(model_id):
+    """تنظیم یک مدل به عنوان مدل فعال هوش مصنوعی کاربر"""
+    user_models = ModelEntry.query.join(Provider).filter(Provider.user_id == current_user.id).all()
+    activated_name = None
+
+    for model in user_models:
+        if model.id == model_id:
+            model.is_active = True
+            activated_name = model.display_name
+        else:
+            model.is_active = False
+
+    if not activated_name:
+        flash("مدل پیدا نشد.", "error")
+        return redirect(url_for("model_config.index"))
+
+    db.session.commit()
+    flash(f"مدل «{activated_name}» به‌عنوان مدل فعال خلاصه‌ساز تنظیم شد.", "info")
     return redirect(url_for("model_config.index"))
 
 
