@@ -1,19 +1,17 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
+
+from youtube_service import search_youtube_videos, summarize_youtube_video_text
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-# Order here defines the order of tabs in the sidebar.
-# endpoint/params tell the template which route to link to - most tabs use
-# the generic dashboard.overview route, but tabs with their own real
-# blueprint (like models config) point directly at their own route.
 TABS = [
     {"key": "content-analyzer", "label": "تحلیل محتوا", "icon": "📊",
      "endpoint": "dashboard.overview", "params": {"tab": "content-analyzer"},
      "placeholder": "این بخش محتوای یک یا چند URL را واکشی و از نظر SEO تحلیل می‌کند - به‌زودی."},
     {"key": "youtube-research", "label": "پژوهش یوتیوب", "icon": "🎥",
      "endpoint": "dashboard.overview", "params": {"tab": "youtube-research"},
-     "placeholder": "این بخش پربازدیدترین ویدیوهای یوتیوب را بر اساس کلمه کلیدی پیدا می‌کند - به‌زودی."},
+     "placeholder": ""},
     {"key": "google-research", "label": "مقالات گوگل", "icon": "🔍",
      "endpoint": "dashboard.overview", "params": {"tab": "google-research"},
      "placeholder": "این بخش برترین مقالات گوگل را بر اساس کلمه کلیدی پیدا می‌کند - به‌زودی."},
@@ -38,10 +36,31 @@ def overview(tab="content-analyzer"):
     if tab not in TABS_BY_KEY or tab == "api-keys":
         tab = "content-analyzer"
 
+    yt_query = request.args.get("q", "آموزش سئو").strip()
+    yt_videos = []
+
+    if tab == "youtube-research":
+        yt_videos = search_youtube_videos(yt_query, max_results=10)
+
     return render_template(
         "dashboard/base.html",
         tabs=TABS,
         active_tab=tab,
         active_tab_info=TABS_BY_KEY[tab],
         user=current_user,
+        yt_videos=yt_videos,
+        yt_query=yt_query,
     )
+
+
+@dashboard_bp.route("/dashboard/youtube/summarize", methods=["POST"])
+@login_required
+def summarize_youtube():
+    data = request.get_json() or {}
+    video_id = data.get("video_id")
+
+    if not video_id:
+        return jsonify({"error": "شناسه ویدیو ارسال نشده است."}), 400
+
+    summary = summarize_youtube_video_text(video_id, current_user)
+    return jsonify({"summary": summary})
