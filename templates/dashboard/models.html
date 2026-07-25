@@ -1,0 +1,109 @@
+{% extends "dashboard/base.html" %}
+
+{% block tab_content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="status {{ category }}" style="margin-bottom: 20px;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="models-section">
+  <h2 class="models-section-title">افزودن ارائه‌دهنده جدید</h2>
+
+  <form method="POST" action="{{ url_for('model_config.add_provider') }}" class="provider-form" id="providerForm">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="preset_key">ارائه‌دهنده</label>
+        <select name="preset_key" id="preset_key">
+          {% for key, preset in presets.items() %}
+            <option value="{{ key }}">{{ preset.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="name">نام نمایشی</label>
+        <input type="text" name="name" id="name" placeholder="مثلاً: GapGPT حساب اصلی" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="api_key">API Key</label>
+        <input type="password" name="api_key" id="api_key" placeholder="sk-..." required>
+      </div>
+
+      <div class="form-field" id="baseUrlField" style="display: none;">
+        <label for="base_url">Base URL (برای ارائه‌دهنده سفارشی)</label>
+        <input type="text" name="base_url" id="base_url" placeholder="https://api.example.com/v1">
+      </div>
+    </div>
+
+    <p id="providerHint" class="provider-hint"></p>
+    <div id="providerWarning" class="status error" style="display: none; margin-bottom: 14px;"></div>
+
+    <button type="submit" class="auth-btn" style="margin-top: 8px;" id="submitProviderBtn">افزودن ارائه‌دهنده</button>
+  </form>
+</div>
+
+<div class="models-section">
+  <h2 class="models-section-title">ارائه‌دهنده‌های من</h2>
+
+  {% if not providers %}
+    <div class="tab-placeholder">
+      <p>هنوز هیچ ارائه‌دهنده‌ای اضافه نکرده‌اید.</p>
+    </div>
+  {% endif %}
+
+  {% for provider in providers %}
+    <div class="provider-card">
+      <div class="provider-card-header">
+        <div>
+          <span class="provider-name">{{ provider.name }}</span>
+          <span class="provider-preset">({{ presets[provider.preset_key].label }})</span>
+        </div>
+        <form method="POST" action="{{ url_for('model_config.delete_provider', provider_id=provider.id) }}"
+              onsubmit="return confirm('ارائه‌دهنده و همه مدل‌های آن حذف شوند؟');">
+          <button type="submit" class="danger-link-btn">حذف ارائه‌دهنده</button>
+        </form>
+      </div>
+
+      <p class="provider-base-url">
+        Base URL:
+        <code>{{ provider.base_url if provider.base_url else "هنوز تنظیم نشده" }}</code>
+      </p>
+      {% if presets[provider.preset_key].model_hint %}
+        <p class="provider-hint">{{ presets[provider.preset_key].model_hint }}</p>
+      {% endif %}
+
+      <div class="model-list">
+        {% for model in provider.models %}
+          <div class="model-row">
+            <span>{{ model.display_name }} <code>({{ model.model_id }})</code></span>
+            <form method="POST" action="{{ url_for('model_config.delete_model', model_id=model.id) }}"
+                  onsubmit="return confirm('این مدل حذف شود؟');">
+              <button type="submit" class="danger-link-btn">حذف</button>
+            </form>
+          </div>
+        {% else %}
+          <p class="no-models-text">هنوز مدلی برای این ارائه‌دهنده اضافه نشده.</p>
+        {% endfor %}
+      </div>
+
+      <form method="POST" action="{{ url_for('model_config.add_model', provider_id=provider.id) }}" class="add-model-form">
+        <input type="text" name="model_id" placeholder="شناسه مدل، مثلاً gpt-4o-mini" required>
+        <input type="text" name="display_name" placeholder="نام نمایشی (اختیاری)">
+        <button type="submit" class="auth-btn auth-btn-small">افزودن مدل</button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+  window.PROVIDER_PRESETS = {{ presets | tojson }};
+</script>
+<script src="{{ url_for('static', filename='models.js') }}"></script>
+{% endblock %}
