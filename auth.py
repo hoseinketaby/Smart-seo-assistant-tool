@@ -1,36 +1,72 @@
-from flask import Blueprint, render_template
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
-dashboard_bp = Blueprint("dashboard", __name__)
+from extensions import db
+from models import User
 
-# Order here defines the order of tabs in the sidebar.
-TABS = [
-    {"key": "content-analyzer", "label": "تحلیل محتوا", "icon": "📊",
-     "placeholder": "این بخش محتوای یک یا چند URL را واکشی و از نظر SEO تحلیل می‌کند - به‌زودی."},
-    {"key": "youtube-research", "label": "پژوهش یوتیوب", "icon": "🎥",
-     "placeholder": "این بخش پربازدیدترین ویدیوهای یوتیوب را بر اساس کلمه کلیدی پیدا می‌کند - به‌زودی."},
-    {"key": "google-research", "label": "مقالات گوگل", "icon": "🔍",
-     "placeholder": "این بخش برترین مقالات گوگل را بر اساس کلمه کلیدی پیدا می‌کند - به‌زودی."},
-    {"key": "summarizer", "label": "خلاصه‌ساز", "icon": "📝",
-     "placeholder": "این بخش همان خلاصه‌ساز محتوای وب/یوتیوب موجود است - در مرحله بعد منتقل می‌شود."},
-    {"key": "history", "label": "تاریخچه", "icon": "🕒",
-     "placeholder": "این بخش تحلیل‌ها و جستجوهای قبلی شما را نمایش می‌دهد - به‌زودی."},
-]
-
-TABS_BY_KEY = {t["key"]: t for t in TABS}
+auth_bp = Blueprint("auth", __name__)
 
 
-@dashboard_bp.route("/dashboard")
-@dashboard_bp.route("/dashboard/<tab>")
+@auth_bp.route("/signup", methods=["GET", "POST"])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.overview"))
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not email or not password:
+            flash("ایمیل و رمز عبور الزامی است.", "error")
+            return render_template("signup.html", email=email)
+
+        if password != confirm_password:
+            flash("رمز عبور و تکرار آن یکسان نیستند.", "error")
+            return render_template("signup.html", email=email)
+
+        if len(password) < 8:
+            flash("رمز عبور باید حداقل ۸ کاراکتر باشد.", "error")
+            return render_template("signup.html", email=email)
+
+        if User.query.filter_by(email=email).first():
+            flash("این ایمیل قبلاً ثبت شده است.", "error")
+            return render_template("signup.html", email=email)
+
+        user = User(email=email, password_hash=generate_password_hash(password))
+        db.session.add(user)
+        db.session.commit()
+
+        login_user(user)
+        return redirect(url_for("dashboard.overview"))
+
+    return render_template("signup.html", email="")
+
+
+@auth_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.overview"))
+
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            next_page = request.args.get("next")
+            return redirect(next_page or url_for("dashboard.overview"))
+
+        flash("ایمیل یا رمز عبور اشتباه است.", "error")
+        return render_template("login.html", email=email)
+
+    return render_template("login.html", email="")
+
+
+@auth_bp.route("/logout")
 @login_required
-def overview(tab="content-analyzer"):
-    if tab not in TABS_BY_KEY:
-        tab = "content-analyzer"
-
-    return render_template(
-        "dashboard/base.html",
-        tabs=TABS,
-        active_tab=tab,
-        active_tab_info=TABS_BY_KEY[tab],
-        user=current_user,
-    )
+def logout():
+    logout_user()
+    return redirect(url_for("auth.login"))
