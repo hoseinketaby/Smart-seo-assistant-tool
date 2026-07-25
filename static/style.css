@@ -1,285 +1,365 @@
-/* وارد کردن فونت وزیرمتن برای نمایش هماهنگ متون فارسی */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&display=swap');
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>داشبورد — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  
+  <!-- اضافه کردن Bootstrap برای استایل بهتر -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- اضافه کردن Font Awesome برای آیکون‌ها -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="layout">
 
-:root {
-  --bg-dark: #0a0e17;
-  --bg-card: #121a2e;
-  --bg-sidebar: #0e1424;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --accent: #38bdf8;
-  --accent-glow: rgba(56, 189, 248, 0.15);
-  --border-color: #22314d;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --error-bg: rgba(239, 68, 68, 0.1);
-  --error-text: #fca5a5;
-  --error-border: #7f1d1d;
-  --success-bg: rgba(16, 185, 129, 0.1);
-  --success-text: #6ee7b7;
-  --success-border: #064e3b;
-  --font-sans: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+    <!-- Sidebar: tab navigation -->
+    <aside class="sidebar dashboard-sidebar">
+      <h2>🔎 دستیار SEO</h2>
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+      <nav class="tab-nav">
+        {% for tab in tabs %}
+          <a href="{{ url_for(tab.endpoint, **tab.params) }}"
+             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </a>
+        {% endfor %}
+      </nav>
 
-body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  direction: rtl;
-  text-align: right;
-  line-height: 1.6;
-}
+      <div class="sidebar-footer">
+        <p class="user-email">{{ user.email }}</p>
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج</a>
+      </div>
+    </aside>
 
-.auth-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background-color: var(--bg-dark);
-  padding: 1.5rem;
-}
+    <!-- Main content: active tab -->
+    <main class="main">
+      <h1>{{ active_tab_info.icon }} {{ active_tab_info.label }}</h1>
 
-.auth-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 2.5rem 2rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-}
+      {% block tab_content %}
+        {% if active_tab == 'youtube-research' %}
+          <!-- بخش یوتیوب -->
+          <div class="youtube-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='youtube-research') }}" class="search-form">
+                <div class="input-group">
+                  <input type="text" 
+                         name="q" 
+                         class="form-control" 
+                         placeholder="جستجوی ویدیو در یوتیوب..." 
+                         value="{{ yt_query if yt_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+              <div class="search-info-badge">
+                {% if yt_query %}
+                  <span>نتایج جستجو برای: "{{ yt_query }}"</span>
+                {% else %}
+                  <span>🔥 ویدیوهای پرطرفدار امروز</span>
+                {% endif %}
+              </div>
+            </div>
 
-.auth-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
+            <!-- عنوان برترین ویدیوها -->
+            <div class="section-title">
+              {% if yt_query %}
+                <h3>نتایج جستجو برای: "{{ yt_query }}"</h3>
+              {% else %}
+                <h3>🔥 ۱۰ ویدیوی برتر یوتیوب</h3>
+                <p>پرطرفدارترین ویدیوهای امروز</p>
+              {% endif %}
+            </div>
 
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
+            <!-- نمایش نتایج ویدیوها -->
+            <div class="videos-grid">
+              {% if yt_videos %}
+                <div class="row">
+                  {% for video in yt_videos %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                      <div class="video-card">
+                        <div class="video-thumbnail">
+                          <img src="{{ video.thumbnail }}" alt="{{ video.title }}" loading="lazy">
+                          <span class="video-duration">{{ video.duration }}</span>
+                        </div>
+                        <div class="video-info">
+                          <h5 class="video-title">{{ video.title }}</h5>
+                          <p class="video-channel">{{ video.channel }}</p>
+                          {% if video.views %}
+                            <p class="video-views"><i class="far fa-eye"></i> {{ video.views }}</p>
+                          {% endif %}
+                        </div>
+                        <div class="video-actions">
+                          <a href="{{ video.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <i class="fab fa-youtube"></i> تماشا
+                          </a>
+                          <button class="btn btn-primary btn-sm summarize-btn" 
+                                  data-video-id="{{ video.video_id }}"
+                                  data-video-title="{{ video.title }}">
+                            <i class="fas fa-file-alt"></i> خلاصه‌سازی
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tab-placeholder">
+                  <p>هیچ ویدیویی یافت نشد. لطفاً جستجوی دیگری انجام دهید.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
 
-.auth-form label {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: -0.75rem;
-}
+        {% elif active_tab == 'google-research' %}
+          <!-- بخش گوگل - روش دوم (ممکن است محدود شود) -->
+          <div class="google-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='google-research') }}" class="search-form">
+                <div class="input-group">
+                  <input type="text" 
+                         name="gq" 
+                         class="form-control" 
+                         placeholder="جستجوی مقالات در گوگل..." 
+                         value="{{ google_query if google_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+              <div class="search-info-badge">
+                <span style="background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border);">
+                  ⚠️ ممکن است به دلیل محدودیت گوگل، نتایج نمایش داده نشود
+                </span>
+              </div>
+            </div>
 
-.auth-form input {
-  background-color: var(--bg-sidebar);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
-}
+            <!-- عنوان برترین مقالات -->
+            <div class="section-title">
+              {% if google_query %}
+                <h3>نتایج جستجو برای: "{{ google_query }}"</h3>
+              {% else %}
+                <h3>🔥 ۱۰ مقاله برتر گوگل</h3>
+                <p>پرطرفدارترین مقالات امروز</p>
+              {% endif %}
+            </div>
 
-.auth-form input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
+            <!-- نمایش نتایج مقالات گوگل -->
+            <div class="google-results">
+              {% if google_results %}
+                <div class="row">
+                  {% for result in google_results %}
+                    <div class="col-12 mb-3">
+                      <div class="result-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                        <h5 style="font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 8px;">
+                          <a href="{{ result.link }}" target="_blank" style="color: var(--accent); text-decoration: none;">
+                            {{ result.title }}
+                          </a>
+                        </h5>
+                        {% if result.domain %}
+                          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0;">{{ result.domain }}</p>
+                        {% endif %}
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0;">
+                          {{ result.snippet }}
+                        </p>
+                        <div style="margin-top: 12px;">
+                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt"></i> مطالعه
+                          </a>
+                          {% if result.source %}
+                            <span style="background: var(--bg-sidebar); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; margin-right: 8px; color: var(--text-muted); border: 1px solid var(--border-color);">
+                              {{ result.source }}
+                            </span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tab-placeholder">
+                  <p>هیچ نتیجه‌ای از گوگل یافت نشد.</p>
+                  <p style="color: var(--text-muted); font-size: 0.9rem;">گوگل ممکن است درخواست شما را محدود کرده باشد. از تب DuckDuckGo استفاده کنید.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
 
-.auth-btn {
-  background-color: var(--primary);
-  color: #ffffff;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-}
+        {% elif active_tab == 'duckduckgo-research' %}
+          <!-- بخش DuckDuckGo - روش اول (پایدارتر) -->
+          <div class="duckduckgo-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='duckduckgo-research') }}" class="search-form">
+                <div class="input-group">
+                  <input type="text" 
+                         name="dq" 
+                         class="form-control" 
+                         placeholder="جستجو با DuckDuckGo..." 
+                         value="{{ duckduckgo_query if duckduckgo_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+              <div class="search-info-badge">
+                <span style="background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border);">
+                  ✅ بدون محدودیت - پایدار
+                </span>
+              </div>
+            </div>
 
-.auth-btn:hover {
-  background-color: var(--primary-hover);
-}
+            <!-- عنوان برترین مقالات -->
+            <div class="section-title">
+              {% if duckduckgo_query %}
+                <h3>نتایج جستجو برای: "{{ duckduckgo_query }}"</h3>
+              {% else %}
+                <h3>🦆 ۱۰ مقاله برتر DuckDuckGo</h3>
+                <p>پرطرفدارترین مقالات امروز</p>
+              {% endif %}
+            </div>
 
-.auth-btn:active {
-  transform: scale(0.98);
-}
+            <!-- نمایش نتایج DuckDuckGo -->
+            <div class="duckduckgo-results">
+              {% if duckduckgo_results %}
+                <div class="row">
+                  {% for result in duckduckgo_results %}
+                    <div class="col-12 mb-3">
+                      <div class="result-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                        <h5 style="font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 8px;">
+                          <a href="{{ result.link }}" target="_blank" style="color: var(--accent); text-decoration: none;">
+                            {{ result.title }}
+                          </a>
+                        </h5>
+                        {% if result.domain %}
+                          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0;">{{ result.domain }}</p>
+                        {% endif %}
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0;">
+                          {{ result.snippet }}
+                        </p>
+                        <div style="margin-top: 12px;">
+                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt"></i> مطالعه
+                          </a>
+                          {% if result.source %}
+                            <span style="background: var(--bg-sidebar); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; margin-right: 8px; color: var(--text-muted); border: 1px solid var(--border-color);">
+                              {{ result.source }}
+                            </span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tab-placeholder">
+                  <p>هیچ نتیجه‌ای یافت نشد.</p>
+                  <p style="color: var(--text-muted); font-size: 0.9rem;">لطفاً جستجوی دیگری انجام دهید.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
 
-.auth-switch {
-  margin-top: 1.5rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-}
+        {% else %}
+          <!-- سایر تب‌ها -->
+          <div class="tab-placeholder">
+            <p>{{ active_tab_info.placeholder }}</p>
+          </div>
+        {% endif %}
+      {% endblock %}
+    </main>
 
-.auth-switch a {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
-}
+  </div>
 
-.auth-switch a:hover {
-  color: var(--primary);
-}
+  <!-- مودال نمایش خلاصه -->
+  <div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
+        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 25px;">
+          <h5 class="modal-title" style="color: var(--text-main); font-weight: 700;">
+            <i class="fas fa-file-alt"></i> خلاصه ویدیو
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+        </div>
+        <div class="modal-body" id="summaryContent" style="padding: 25px; max-height: 70vh; overflow-y: auto;">
+          <div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            در حال پردازش...
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 15px 25px;">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: var(--bg-sidebar); color: var(--text-muted); border: 1px solid var(--border-color);">
+            بستن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-.status {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid transparent;
-}
-
-.status.error {
-  background-color: var(--error-bg);
-  color: var(--error-text);
-  border-color: var(--error-border);
-}
-
-.status.success {
-  background-color: var(--success-bg);
-  color: var(--success-text);
-  border-color: var(--success-border);
-}
-
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 280px;
-  background-color: var(--bg-sidebar);
-  border-left: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  padding: 2rem 1.25rem;
-  flex-shrink: 0;
-}
-
-.sidebar h2 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 2rem;
-  padding-right: 0.5rem;
-}
-
-.tab-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex-grow: 1;
-}
-
-.tab-link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.tab-link:hover {
-  background-color: var(--bg-card);
-  color: var(--text-main);
-}
-
-.tab-link.active {
-  background-color: var(--primary);
-  color: #ffffff;
-}
-
-.tab-icon {
-  font-size: 1.15rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-footer {
-  border-top: 1px solid var(--border-color);
-  padding-top: 1.25rem;
-  margin-top: auto;
-}
-
-.user-email {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  word-break: break-all;
-  margin-bottom: 0.75rem;
-  padding-right: 0.5rem;
-}
-
-.logout-link {
-  display: inline-block;
-  color: #f87171;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  transition: color 0.2s;
-}
-
-.logout-link:hover {
-  color: #ef4444;
-}
-
-.main {
-  flex-grow: 1;
-  background-color: var(--bg-dark);
-  padding: 2.5rem;
-  overflow-y: auto;
-}
-
-.main h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.tab-placeholder {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--text-muted);
-  max-width: 800px;
-}
-
-@media (max-width: 768px) {
-  .layout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    border-left: none;
-    border-bottom: 1px solid var(--border-color);
-    padding: 1.5rem;
-  }
-
-  .main {
-    padding: 1.5rem;
-  }
-}
+  <!-- اسکریپت‌های مورد نیاز -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // رویداد برای دکمه‌های خلاصه‌سازی
+      document.querySelectorAll('.summarize-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const videoId = this.dataset.videoId;
+          const videoTitle = this.dataset.videoTitle;
+          
+          // نمایش مودال
+          const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
+          modal.show();
+          
+          // نمایش متن بارگذاری
+          document.getElementById('summaryContent').innerHTML = 
+            `<div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              در حال خلاصه‌سازی ویدیو "${videoTitle}"...
+            </div>`;
+          
+          // ارسال درخواست به سرور
+          fetch('/dashboard/youtube/summarize', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ video_id: videoId }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              document.getElementById('summaryContent').innerHTML = 
+                `<div class="status error">${data.error}</div>`;
+            } else {
+              // تبدیل خلاصه به HTML با حفظ خطوط و تیترها
+              const summaryHtml = data.summary
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .map(line => {
+                  if (line.startsWith('#')) {
+                    const level = line.match(/^#+/)[0].length;
+                    const text = line.replace(/^#+\s*/, '');
+                    return `<h${Math.min(level, 6)} style="color: var(--text-main); margin-top: 15px; margin-bottom: 10px;">${text}</h${Math.min(level, 6)}>`;
+                  }
+                  return `<p style="color: var(--text-muted); line-height: 1.8;">${line}</p>`;
+                })
+                .join('');
+              
+              document.getElementById('summaryContent').innerHTML = 
+                `<div class="summary-result">${summaryHtml}</div>`;
+            }
+          })
+          .catch(error => {
+            document.getElementById('summaryContent').innerHTML = 
+              `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
