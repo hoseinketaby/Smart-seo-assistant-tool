@@ -110,7 +110,7 @@
           </div>
 
         {% elif active_tab == 'google-research' %}
-          <!-- بخش گوگل -->
+          <!-- بخش گوگل - روش دوم (ممکن است محدود شود) -->
           <div class="google-research-section">
             <!-- باکس جستجو -->
             <div class="search-box-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
@@ -126,6 +126,11 @@
                   </button>
                 </div>
               </form>
+              <div style="text-align: center; margin-top: 10px;">
+                <span style="background: #fff3cd; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #856404;">
+                  ⚠️ ممکن است به دلیل محدودیت گوگل، نتایج نمایش داده نشود
+                </span>
+              </div>
             </div>
 
             <!-- عنوان برترین مقالات -->
@@ -141,17 +146,32 @@
             <!-- نمایش نتایج مقالات گوگل -->
             <div class="google-results">
               {% if google_results %}
-                <!-- TODO: نمایش نتایج جستجوی گوگل -->
                 <div class="row">
                   {% for result in google_results %}
                     <div class="col-12 mb-3">
-                      <div class="card">
+                      <div class="card" style="border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">
                         <div class="card-body">
-                          <h5 class="card-title">{{ result.title }}</h5>
-                          <p class="card-text">{{ result.snippet }}</p>
-                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="fas fa-external-link-alt"></i> مطالعه
-                          </a>
+                          <h5 class="card-title" style="font-size: 16px; font-weight: 600; color: #1a0dab;">
+                            <a href="{{ result.link }}" target="_blank" style="text-decoration: none; color: #1a0dab;">
+                              {{ result.title }}
+                            </a>
+                          </h5>
+                          {% if result.domain %}
+                            <p style="color: #006621; font-size: 13px; margin: 5px 0;">{{ result.domain }}</p>
+                          {% endif %}
+                          <p class="card-text" style="color: #545454; font-size: 14px; margin: 5px 0;">
+                            {{ result.snippet }}
+                          </p>
+                          <div style="margin-top: 10px;">
+                            <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
+                              <i class="fas fa-external-link-alt"></i> مطالعه
+                            </a>
+                            {% if result.source %}
+                              <span style="background: #f0f0f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 10px; color: #666;">
+                                {{ result.source }}
+                              </span>
+                            {% endif %}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -159,8 +179,85 @@
                 </div>
               {% else %}
                 <div class="tab-placeholder" style="text-align: center; padding: 40px;">
-                  <p>در حال حاضر بخش گوگل در حال پیاده‌سازی است...</p>
-                  <p style="color: #6c757d;">به زودی امکان جستجوی مقالات گوگل فراهم خواهد شد.</p>
+                  <p>هیچ نتیجه‌ای از گوگل یافت نشد.</p>
+                  <p style="color: #6c757d;">گوگل ممکن است درخواست شما را محدود کرده باشد. از تب DuckDuckGo استفاده کنید.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+        {% elif active_tab == 'duckduckgo-research' %}
+          <!-- بخش DuckDuckGo - روش اول (پایدارتر) -->
+          <div class="duckduckgo-research-section">
+            <!-- باکس جستجو -->
+            <div class="search-box-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='duckduckgo-research') }}" class="search-form">
+                <div class="input-group" style="max-width: 600px; margin: 0 auto;">
+                  <input type="text" 
+                         name="dq" 
+                         class="form-control" 
+                         placeholder="جستجو با DuckDuckGo..." 
+                         value="{{ duckduckgo_query if duckduckgo_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+              <div style="text-align: center; margin-top: 10px;">
+                <span style="background: #d4edda; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #155724;">
+                  ✅ بدون محدودیت - پایدار
+                </span>
+              </div>
+            </div>
+
+            <!-- عنوان برترین مقالات -->
+            <div style="text-align: center; margin-bottom: 25px;">
+              {% if duckduckgo_query %}
+                <h3 style="color: #2c3e50;">نتایج جستجو برای: "{{ duckduckgo_query }}"</h3>
+              {% else %}
+                <h3 style="color: #2c3e50;">🦆 ۱۰ مقاله برتر DuckDuckGo</h3>
+                <p style="color: #7f8c8d; font-size: 14px;">پرطرفدارترین مقالات امروز</p>
+              {% endif %}
+            </div>
+
+            <!-- نمایش نتایج DuckDuckGo -->
+            <div class="duckduckgo-results">
+              {% if duckduckgo_results %}
+                <div class="row">
+                  {% for result in duckduckgo_results %}
+                    <div class="col-12 mb-3">
+                      <div class="card" style="border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">
+                        <div class="card-body">
+                          <h5 class="card-title" style="font-size: 16px; font-weight: 600; color: #1a0dab;">
+                            <a href="{{ result.link }}" target="_blank" style="text-decoration: none; color: #1a0dab;">
+                              {{ result.title }}
+                            </a>
+                          </h5>
+                          {% if result.domain %}
+                            <p style="color: #006621; font-size: 13px; margin: 5px 0;">{{ result.domain }}</p>
+                          {% endif %}
+                          <p class="card-text" style="color: #545454; font-size: 14px; margin: 5px 0;">
+                            {{ result.snippet }}
+                          </p>
+                          <div style="margin-top: 10px;">
+                            <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
+                              <i class="fas fa-external-link-alt"></i> مطالعه
+                            </a>
+                            {% if result.source %}
+                              <span style="background: #f0f0f0; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 10px; color: #666;">
+                                {{ result.source }}
+                              </span>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="tab-placeholder" style="text-align: center; padding: 40px;">
+                  <p>هیچ نتیجه‌ای یافت نشد.</p>
+                  <p style="color: #6c757d;">لطفاً جستجوی دیگری انجام دهید.</p>
                 </div>
               {% endif %}
             </div>
