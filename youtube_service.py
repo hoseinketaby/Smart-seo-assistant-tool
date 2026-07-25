@@ -12,8 +12,7 @@ from crypto_utils import decrypt_value
 
 def get_trending_youtube_videos(max_results: int = 10):
     """دریافت ویدیوهای پرطرفدار یوتیوب بدون نیاز به API key"""
-    # استفاده از صفحه اصلی یوتیوب برای دریافت ویدیوهای پرطرفدار
-    url = "https://www.youtube.com/"
+    url = "https://www.youtube.com/feed/trending"
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -25,7 +24,6 @@ def get_trending_youtube_videos(max_results: int = 10):
         with urllib.request.urlopen(req, timeout=10) as response:
             html = response.read().decode("utf-8")
         
-        # استخراج داده‌های اولیه
         match = re.search(r"var ytInitialData = ({.*?});</script>", html)
         if not match:
             match = re.search(r"window\[\"ytInitialData\"\] = ({.*?});", html)
@@ -62,7 +60,6 @@ def get_trending_youtube_videos(max_results: int = 10):
                         thumbnails = video.get("thumbnail", {}).get("thumbnails", [])
                         thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
                         
-                        # دریافت تعداد بازدید (تقریبی)
                         views_text = video.get("viewCountText", {}).get("simpleText", "")
                         
                         if video_id and title:
@@ -143,7 +140,6 @@ def search_youtube_videos(query: str, max_results: int = 10):
                 thumbnails = video_data.get("thumbnail", {}).get("thumbnails", [])
                 thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
                 
-                # دریافت تعداد بازدید (تقریبی)
                 views_text = video_data.get("viewCountText", {}).get("simpleText", "")
 
                 if video_id and title:
