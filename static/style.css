@@ -3,17 +3,17 @@
    تم: پس‌زمینه سرمه‌ای تیره + لهجه‌ی کهربایی (amber)
    ============================================================ */
 :root {
-  --bg-dark: #0b1220;       /* پس‌زمینه‌ی کلی صفحه */
-  --bg-card: #131b2e;       /* کارت‌ها، پنل‌ها، سایدبار محتوا */
-  --bg-sidebar: #0d1526;    /* سایدبار و ورودی‌های تیره‌تر */
-  --border-color: #253150;
+  --bg-dark: #0b0e14;       /* پس‌زمینه‌ی کلی صفحه (تقریباً مشکی) */
+  --bg-card: #131826;       /* کارت‌ها، پنل‌ها، محتوای اصلی */
+  --bg-sidebar: #10141f;    /* سایدبار و ورودی‌های تیره‌تر */
+  --border-color: #232a3d;
 
-  --text-main: #e8ecf4;
+  --text-main: #eef1f7;
   --text-muted: #8891a8;
   --text-dim: #5b6480;
 
-  --accent: #f2c14e;
-  --accent-ink: #1a1300;    /* رنگ متن روی پس‌زمینه‌ی کهربایی */
+  --accent: #3b6ef6;
+  --accent-ink: #ffffff;    /* رنگ متن روی پس‌زمینه‌ی آبی */
 
   --error-bg: rgba(251, 113, 133, 0.08);
   --error-text: #fda4af;
@@ -295,6 +295,75 @@ a {
   padding: 40px;
   text-align: center;
   color: var(--text-muted);
+}
+
+/* ============================================================
+   عناصر عمومی فرم داخل تب‌ها (select / textarea / input / دکمه‌ها)
+   این قوانین کلی‌اند تا هر تبی که از کلاس‌های خام Bootstrap استفاده
+   کند (مثل تحلیل محتوا) هم بی‌استایل نماند
+   ============================================================ */
+.main .form-control,
+.main .form-select,
+.main textarea {
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+}
+
+.main .form-control::placeholder,
+.main textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.main .form-control:focus,
+.main .form-select:focus,
+.main textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: none;
+  background-color: var(--bg-sidebar);
+  color: var(--text-main);
+}
+
+.main label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.main .btn-primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+}
+
+.main .btn-primary:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  opacity: 0.9;
+  color: var(--accent-ink);
+}
+
+.main .btn-outline-secondary,
+.main .btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-color);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+}
+
+.main .btn-outline-secondary:hover,
+.main .btn-secondary:hover {
+  background-color: var(--bg-sidebar);
+  border-color: var(--text-muted);
+  color: var(--text-main);
 }
 
 /* ============================================================
