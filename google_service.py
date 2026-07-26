@@ -113,15 +113,7 @@ def search_duckduckgo(query: str, max_results: int = 10):
 
 
 def get_trending_duckduckgo_articles(max_results: int = 10):
-    trending_queries = [
-        "آخرین اخبار ایران", "آموزش برنامه نویسی", "سلامت و تغذیه",
-        "فناوری اطلاعات", "بورس و اقتصاد", "فیلم و سریال جدید",
-        "ورزش و فوتبال", "گردشگری و سفر", "مد و فشن", "کتاب و مطالعه",
-        "هوش مصنوعی", "بیت کوین", "تست شخصیت", "آموزش زبان انگلیسی",
-        "دیجیتال مارکتینگ",
-    ]
-    query = random.choice(trending_queries)
-    return search_duckduckgo(query, max_results)
+    return search_duckduckgo(DEFAULT_TRENDING_KEYWORD, max_results)
 
 
 # ==================== Bing (لایه‌ی جایگزین برای گوگل) ====================
@@ -259,13 +251,12 @@ def search_google_html(query: str, max_results: int = 10):
         return []
 
 
+# کلمه‌ی کلیدی پیش‌فرضی که قبل از اولین جستجوی کاربر، پشت‌صحنه
+# جستجو می‌شود تا تب هیچ‌وقت خالی نباشد. این مقدار هرگز داخل
+# فیلد input نمایش داده نمی‌شود چون dashboard.py فقط پارامتر
+# واقعی URL (که خالی است) را به تمپلیت پاس می‌دهد، نه این مقدار را.
+DEFAULT_TRENDING_KEYWORD = "آموزش سئو"
+
+
 def get_google_trending_html(max_results: int = 10):
-    trending_topics = [
-        "آموزش هوش مصنوعی", "برنامه نویسی پایتون", "آخرین اخبار سیاسی",
-        "سلامت روان", "تکنولوژی جدید", "بورس و سرمایه‌گذاری",
-        "فیلم های جدید", "ورزش و تناسب اندام", "طراحی وب",
-        "یادگیری زبان انگلیسی", "آموزش سئو", "بازاریابی محتوا",
-        "توسعه فردی", "کار از راه دور", "کسب درآمد اینترنتی",
-    ]
-    query = random.choice(trending_topics)
-    return search_google_html(query, max_results)
+    return search_google_html(DEFAULT_TRENDING_KEYWORD, max_results)
