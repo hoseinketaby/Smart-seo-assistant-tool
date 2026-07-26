@@ -1,27 +1,29 @@
 /* ============================================================
    دستیار SEO — Design tokens
-   تم: پس‌زمینه سرمه‌ای تیره + لهجه‌ی کهربایی (amber)
+   تم: پس‌زمینه‌ی کاملاً مشکی + پیغام‌های آبی نئونی
    ============================================================ */
 :root {
-  --bg-dark: #0b0e14;       /* پس‌زمینه‌ی کلی صفحه (تقریباً مشکی) */
-  --bg-card: #131826;       /* کارت‌ها، پنل‌ها، محتوای اصلی */
-  --bg-sidebar: #10141f;    /* سایدبار و ورودی‌های تیره‌تر */
-  --border-color: #232a3d;
+  --bg-dark: #000000;       /* پس‌زمینه‌ی کلی صفحه — مشکی خالص */
+  --bg-card: #0d0f14;       /* کارت‌ها/پنل‌ها — کمی روشن‌تر تا مرزها دیده شوند */
+  --bg-sidebar: #0a0b10;
+  --border-color: #20242f;
 
-  --text-main: #000000;     /* تغییر: متن اصلی به مشکی */
-  --text-muted: #2d3748;    /* تغییر: متن کم‌رنگ‌تر به خاکستری تیره */
-  --text-dim: #4a5568;      /* تغییر: متن بسیار کم‌رنگ به خاکستری */
+  --text-main: #f2f4f8;     /* روشن نگه داشته شد تا روی پس‌زمینه‌ی مشکی خوانا بماند */
+  --text-muted: #9aa3b5;
+  --text-dim: #626b7d;
 
   --accent: #3b6ef6;
-  --accent-ink: #ffffff;    /* رنگ متن روی پس‌زمینه‌ی آبی */
+  --accent-ink: #ffffff;
 
-  --error-bg: rgba(251, 113, 133, 0.08);
-  --error-text: #dc2626;    /* تغییر: متن خطا به قرمز تیره برای خوانایی بهتر */
-  --error-border: rgba(251, 113, 133, 0.35);
+  /* پیغام‌ها (موفقیت/خطا) — هر دو یکدست آبی نئونی با کمی درخشش */
+  --neon-blue: #22d3ee;
+  --success-bg: rgba(34, 211, 238, 0.10);
+  --success-text: #7fe3f7;
+  --success-border: rgba(34, 211, 238, 0.45);
 
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --success-text: #065f46;  /* تغییر: متن موفقیت به سبز تیره */
-  --success-border: rgba(16, 185, 129, 0.35);
+  --error-bg: rgba(34, 211, 238, 0.10);
+  --error-text: #7fe3f7;
+  --error-border: rgba(34, 211, 238, 0.45);
 
   --font-body: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
@@ -41,10 +43,22 @@ html, body {
   padding: 0;
 }
 
+/* ============================================================
+   اجبار فونت فارسی روی همه‌چیز — چون Bootstrap در base.html
+   بعد از این فایل لود می‌شود و فونت پیش‌فرضش را جایگزین می‌کند،
+   اینجا با !important قطعی می‌کنیم که همه‌جا Vazirmatn بماند
+   ============================================================ */
+html, body,
+input, button, select, textarea, optgroup,
+.btn, .form-control, .form-select,
+h1, h2, h3, h4, h5, h6,
+.modal, .modal-content, .dropdown-menu {
+  font-family: var(--font-body) !important;
+}
+
 body {
   background-color: var(--bg-dark);
   color: var(--text-main);
-  font-family: var(--font-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -59,13 +73,14 @@ a {
 }
 
 /* ============================================================
-   Status / flash messages (مشترک بین همه صفحات)
+   Status / flash messages — آبی نئونی با درخشش ملایم
    ============================================================ */
 .status {
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
   margin-bottom: 16px;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.15);
 }
 
 .status.success {
@@ -99,12 +114,13 @@ a {
   padding: 40px 36px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 .auth-title {
   font-size: 1.4rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0 0 24px;
   text-align: center;
   color: var(--text-main);
@@ -131,7 +147,6 @@ a {
   border-radius: var(--radius-sm);
   padding: 12px 14px;
   font-size: 0.95rem;
-  font-family: var(--font-body);
   width: 100%;
 }
 
@@ -165,7 +180,6 @@ a {
   padding: 12px 20px;
   font-size: 0.95rem;
   font-weight: 700;
-  font-family: var(--font-body);
   cursor: pointer;
   margin-top: 20px;
   transition: opacity 0.15s ease;
@@ -217,6 +231,8 @@ a {
 
 .sidebar.dashboard-sidebar h2 {
   font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0 0 24px;
   padding: 0 8px;
   color: var(--text-main);
@@ -277,14 +293,14 @@ a {
 }
 
 .logout-link:hover {
-  color: var(--error-text);
+  color: var(--neon-blue);
 }
 
 .main {
   margin-right: 260px;
   padding: 32px 40px;
   min-width: 0;
-  background-color: #000000; /* تغییر: پس‌زمینه مشکی برای بخش محتوا */
+  background-color: var(--bg-dark);
 }
 
 .main h1 {
@@ -295,9 +311,7 @@ a {
   color: var(--text-main);
 }
 
-.auth-title,
-.models-section-title,
-.sidebar.dashboard-sidebar h2 {
+.models-section-title {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -325,7 +339,6 @@ a {
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 0.9rem;
-  font-family: var(--font-body);
 }
 
 .main .form-control::placeholder,
@@ -400,7 +413,6 @@ a {
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   font-size: 0.9rem;
-  font-family: var(--font-body);
 }
 
 .search-form .form-control::placeholder {
@@ -487,7 +499,7 @@ a {
   font-size: 0.75rem;
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono) !important;
 }
 
 .video-info {
@@ -617,7 +629,6 @@ a {
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   font-size: 0.9rem;
-  font-family: var(--font-body);
 }
 
 .provider-form input:focus,
@@ -632,10 +643,8 @@ a {
   margin: 4px 0 12px;
 }
 
-/* کارت هر ارائه‌دهنده و لیست مدل‌هایش؛ اکثر رنگ‌ها inline
-   با همین متغیرها ست شده‌اند، این بخش فقط ریزه‌کاری‌هاست */
 .provider-card input[type="text"] {
-  font-family: var(--font-body);
+  font-family: var(--font-body) !important;
 }
 
 /* ============================================================
