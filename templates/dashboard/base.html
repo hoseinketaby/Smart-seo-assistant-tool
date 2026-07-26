@@ -275,6 +275,246 @@
             </div>
           </div>
 
+        {% elif active_tab == 'summarizer' %}
+          <!-- بخش خلاصه‌ساز -->
+          <div class="summarizer-section">
+            
+            <!-- انتخاب نوع خلاصه‌سازی -->
+            <div class="search-box-container">
+              <h4 style="color: var(--text-main); margin-bottom: 15px;">نوع خلاصه‌سازی را انتخاب کنید</h4>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="card" style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s;" id="optionText" onclick="selectOption('text')">
+                    <div style="text-align: center;">
+                      <div style="font-size: 2rem; margin-bottom: 10px;">✍️</div>
+                      <h5 style="color: var(--text-main);">خودم متن وارد می‌کنم</h5>
+                      <p style="color: var(--text-muted); font-size: 0.85rem;">متن دلخواه خود را بنویسید و خلاصه‌سازی کنید</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <div class="card" style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s;" id="optionUrl" onclick="selectOption('url')">
+                    <div style="text-align: center;">
+                      <div style="font-size: 2rem; margin-bottom: 10px;">🔗</div>
+                      <h5 style="color: var(--text-main);">لینک صفحه وب</h5>
+                      <p style="color: var(--text-muted); font-size: 0.85rem;">محتوای یک صفحه وب را خلاصه‌سازی کنید</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- بخش ورودی متن دستی -->
+            <div id="textInputSection" style="display: none;">
+              <div class="search-box-container">
+                <h4 style="color: var(--text-main); margin-bottom: 15px;">📝 متن خود را وارد کنید</h4>
+                
+                <label style="color: var(--text-muted); display: block; margin-bottom: 8px;">متن:</label>
+                <textarea id="customText" class="form-control" rows="10" placeholder="متن خود را برای خلاصه‌سازی وارد کنید..." style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 8px; width: 100%; resize: vertical;"></textarea>
+                
+                <div style="margin-top: 15px;">
+                  <label style="color: var(--text-muted); display: block; margin-bottom: 8px;">دستورالعمل خلاصه‌سازی (اختیاری):</label>
+                  <textarea id="textPrompt" class="form-control" rows="3" placeholder="مثلاً: خلاصه‌ای روان و جذاب با ۵ نکته کلیدی بنویس..." style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 8px; width: 100%; resize: vertical;"></textarea>
+                  <div style="margin-top: 8px; color: var(--text-dim); font-size: 0.85rem;">
+                    💡 اگر خالی بگذارید، از دستورالعمل پیش‌فرض استفاده می‌شود.
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <button id="summarizeTextBtn" class="btn btn-primary" style="padding: 12px 40px; font-size: 1rem;">
+                    <i class="fas fa-magic"></i> خلاصه‌سازی متن
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- بخش ورودی لینک وب -->
+            <div id="urlInputSection" style="display: none;">
+              <div class="search-box-container">
+                <h4 style="color: var(--text-main); margin-bottom: 15px;">🔗 لینک صفحه وب را وارد کنید</h4>
+                
+                <label style="color: var(--text-muted); display: block; margin-bottom: 8px;">لینک:</label>
+                <input type="text" id="customUrl" class="form-control" placeholder="مثلاً: https://example.com/article" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 8px; width: 100%;">
+                
+                <div style="margin-top: 15px;">
+                  <label style="color: var(--text-muted); display: block; margin-bottom: 8px;">دستورالعمل خلاصه‌سازی (اختیاری):</label>
+                  <textarea id="urlPrompt" class="form-control" rows="3" placeholder="مثلاً: نکات کلیدی این مقاله را استخراج کن..." style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; border-radius: 8px; width: 100%; resize: vertical;"></textarea>
+                  <div style="margin-top: 8px; color: var(--text-dim); font-size: 0.85rem;">
+                    💡 اگر خالی بگذارید، از دستورالعمل پیش‌فرض استفاده می‌شود.
+                  </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                  <button id="summarizeUrlBtn" class="btn btn-primary" style="padding: 12px 40px; font-size: 1rem;">
+                    <i class="fas fa-magic"></i> خلاصه‌سازی لینک
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- نمایش نتیجه -->
+            <div id="customSummaryResult" style="display: none; margin-top: 30px;">
+              <div class="search-box-container">
+                <h4 style="color: var(--text-main); margin-bottom: 15px;">📄 نتیجه خلاصه‌سازی</h4>
+                <div id="customSummaryContent" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; max-height: 500px; overflow-y: auto; color: var(--text-muted); line-height: 1.8;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <style>
+            .summarizer-section .card:hover {
+              border-color: var(--accent) !important;
+              box-shadow: 0 0 20px rgba(59, 110, 246, 0.15);
+            }
+            .summarizer-section .card.selected {
+              border-color: var(--accent) !important;
+              background: var(--bg-sidebar) !important;
+            }
+          </style>
+
+          <script>
+            let selectedOption = null;
+
+            function selectOption(option) {
+              // حذف کلاس selected از همه کارت‌ها
+              document.querySelectorAll('.summarizer-section .card').forEach(card => {
+                card.classList.remove('selected');
+              });
+              
+              // اضافه کردن کلاس selected به کارت انتخاب شده
+              if (option === 'text') {
+                document.getElementById('optionText').classList.add('selected');
+                document.getElementById('textInputSection').style.display = 'block';
+                document.getElementById('urlInputSection').style.display = 'none';
+              } else if (option === 'url') {
+                document.getElementById('optionUrl').classList.add('selected');
+                document.getElementById('textInputSection').style.display = 'none';
+                document.getElementById('urlInputSection').style.display = 'block';
+              }
+              
+              selectedOption = option;
+              // مخفی کردن نتیجه قبلی
+              document.getElementById('customSummaryResult').style.display = 'none';
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              
+              // ========== خلاصه‌سازی متن دستی ==========
+              document.getElementById('summarizeTextBtn').addEventListener('click', function() {
+                const customText = document.getElementById('customText').value.trim();
+                const customPrompt = document.getElementById('textPrompt').value.trim();
+                const resultContainer = document.getElementById('customSummaryResult');
+                const resultContent = document.getElementById('customSummaryContent');
+                
+                if (!customText) {
+                  alert('لطفاً متن خود را وارد کنید.');
+                  return;
+                }
+                
+                // نمایش نتیجه
+                resultContainer.style.display = 'block';
+                resultContent.innerHTML = `
+                  <div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    در حال پردازش...<br>
+                    <small style="font-size: 0.8rem;">این فرآیند ممکن است چند لحظه طول بکشد...</small>
+                  </div>
+                `;
+                
+                // ارسال درخواست به سرور
+                fetch('/dashboard/custom/summarize', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    source_type: 'text',
+                    text: customText,
+                    prompt: customPrompt
+                  }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.error) {
+                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                  } else {
+                    const summaryHtml = formatSummary(data.summary);
+                    resultContent.innerHTML = `<div class="summary-result">${summaryHtml}</div>`;
+                  }
+                })
+                .catch(error => {
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                });
+              });
+              
+              // ========== خلاصه‌سازی لینک وب ==========
+              document.getElementById('summarizeUrlBtn').addEventListener('click', function() {
+                const customUrl = document.getElementById('customUrl').value.trim();
+                const customPrompt = document.getElementById('urlPrompt').value.trim();
+                const resultContainer = document.getElementById('customSummaryResult');
+                const resultContent = document.getElementById('customSummaryContent');
+                
+                if (!customUrl) {
+                  alert('لطفاً لینک را وارد کنید.');
+                  return;
+                }
+                
+                // نمایش نتیجه
+                resultContainer.style.display = 'block';
+                resultContent.innerHTML = `
+                  <div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    در حال پردازش...<br>
+                    <small style="font-size: 0.8rem;">این فرآیند ممکن است چند لحظه طول بکشد...</small>
+                  </div>
+                `;
+                
+                // ارسال درخواست به سرور
+                fetch('/dashboard/custom/summarize', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    source_type: 'url',
+                    url: customUrl,
+                    prompt: customPrompt
+                  }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.error) {
+                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                  } else {
+                    const summaryHtml = formatSummary(data.summary);
+                    resultContent.innerHTML = `<div class="summary-result">${summaryHtml}</div>`;
+                  }
+                })
+                .catch(error => {
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                });
+              });
+
+              // ========== تابع کمکی برای فرمت‌دهی خلاصه ==========
+              function formatSummary(summary) {
+                return summary
+                  .split('\n')
+                  .map(line => line.trim())
+                  .filter(line => line)
+                  .map(line => {
+                    if (line.startsWith('#')) {
+                      const level = line.match(/^#+/)[0].length;
+                      const text = line.replace(/^#+\s*/, '');
+                      return `<h${Math.min(level, 6)} style="color: var(--text-main); margin-top: 15px; margin-bottom: 10px;">${text}</h${Math.min(level, 6)}>`;
+                    }
+                    return `<p style="color: var(--text-muted); line-height: 1.8;">${line}</p>`;
+                  })
+                  .join('');
+              }
+              
+            });
+          </script>
+
         {% else %}
           <!-- سایر تب‌ها -->
           <div class="tab-placeholder">
