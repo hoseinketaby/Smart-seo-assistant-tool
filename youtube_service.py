@@ -1,5 +1,6 @@
 import json
-import os
+import gzip
+import zlib
 import re
 import urllib.parse
 import urllib.request
@@ -10,77 +11,143 @@ from models import Provider, ModelEntry
 from crypto_utils import decrypt_value
 
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7",
+}
+
+
+def _fetch_html(url, headers=None, timeout=15):
+    req = urllib.request.Request(url, headers=headers or HEADERS)
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        raw = response.read()
+        content_encoding = response.info().get("Content-Encoding", "")
+
+    if content_encoding == "gzip":
+        raw = gzip.decompress(raw)
+    elif content_encoding == "deflate":
+        raw = zlib.decompress(raw)
+
+    return raw.decode("utf-8", errors="ignore")
+
+
+def _extract_json_after_marker(html, marker):
+    """
+    به‌جای regex حریصانه‌ی قبلی (که با JSON تودرتو غلط پارس می‌شد و
+    خاموشانه لیست خالی برمی‌گرداند)، از JSONDecoder.raw_decode استفاده
+    می‌کند که مرزهای { } را واقعاً دنبال می‌کند.
+    """
+    idx = html.find(marker)
+    if idx == -1:
+        return None
+
+    start = idx + len(marker)
+    decoder = json.JSONDecoder()
+    try:
+        obj, _ = decoder.raw_decode(html, start)
+        return obj
+    except Exception:
+        return None
+
+
+def _get_yt_initial_data(html):
+    for marker in ('var ytInitialData = ', 'window["ytInitialData"] = ', "ytInitialData = "):
+        data = _extract_json_after_marker(html, marker)
+        if data:
+            return data
+    return None
+
+
+def _video_from_renderer(video):
+    video_id = video.get("videoId")
+    title_runs = video.get("title", {}).get("runs", [])
+    title = title_runs[0].get("text", "") if title_runs else video.get("title", {}).get("simpleText", "")
+
+    owner_runs = video.get("ownerText", {}).get("runs", [])
+    channel_name = owner_runs[0].get("text", "") if owner_runs else "یوتیوب"
+
+    length_text = video.get("lengthText", {}).get("simpleText", "نامشخص")
+    thumbnails = video.get("thumbnail", {}).get("thumbnails", [])
+    thumbnail_url = thumbnails[-1]["url"] if thumbnails else (
+        f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg" if video_id else ""
+    )
+    views_text = video.get("viewCountText", {}).get("simpleText", "")
+
+    if not (video_id and title):
+        return None
+
+    return {
+        "video_id": video_id,
+        "title": title,
+        "channel": channel_name,
+        "duration": length_text,
+        "thumbnail": thumbnail_url,
+        "url": f"https://www.youtube.com/watch?v={video_id}",
+        "views": views_text,
+    }
+
+
+def _walk_video_renderers(node, out, max_results):
+    """
+    عبور بازگشتی از کل درخت JSON و جمع‌آوری هر videoRenderer که پیدا
+    می‌شود؛ این کار مستقل از تغییر مسیر دقیق کلیدهای تودرتوی یوتیوب
+    (که مدام تغییر می‌کند) است، برخلاف مسیر ثابت قبلی.
+    """
+    if len(out) >= max_results:
+        return
+    if isinstance(node, dict):
+        if "videoRenderer" in node:
+            parsed = _video_from_renderer(node["videoRenderer"])
+            if parsed and not any(v["video_id"] == parsed["video_id"] for v in out):
+                out.append(parsed)
+        for value in node.values():
+            if len(out) >= max_results:
+                return
+            _walk_video_renderers(value, out, max_results)
+    elif isinstance(node, list):
+        for item in node:
+            if len(out) >= max_results:
+                return
+            _walk_video_renderers(item, out, max_results)
+
+
+def _fallback_regex_extract(html, max_results):
+    """آخرین لایه‌ی جایگزین وقتی حتی پارس JSON هم شکست بخورد."""
+    video_ids = re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
+    seen = set()
+    videos = []
+    for vid in video_ids:
+        if vid in seen:
+            continue
+        seen.add(vid)
+        videos.append({
+            "video_id": vid,
+            "title": "",
+            "channel": "یوتیوب",
+            "duration": "نامشخص",
+            "thumbnail": f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+            "url": f"https://www.youtube.com/watch?v={vid}",
+            "views": "",
+        })
+        if len(videos) >= max_results:
+            break
+    return videos
+
+
 def get_trending_youtube_videos(max_results: int = 10):
     """دریافت ویدیوهای پرطرفدار یوتیوب بدون نیاز به API key"""
-    url = "https://www.youtube.com/feed/trending"
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7",
-    }
-    
-    req = urllib.request.Request(url, headers=headers)
+    url = "https://www.youtube.com/feed/trending?gl=IR&hl=fa"
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
-            html = response.read().decode("utf-8")
-        
-        match = re.search(r"var ytInitialData = ({.*?});</script>", html)
-        if not match:
-            match = re.search(r"window\[\"ytInitialData\"\] = ({.*?});", html)
-        
-        if not match:
-            return []
-        
-        data = json.loads(match.group(1))
+        html = _fetch_html(url)
+        data = _get_yt_initial_data(html)
+
         videos = []
-        
-        # دریافت ویدیوهای از بخش trending
-        contents = data.get("contents", {}).get("twoColumnBrowseResultsRenderer", {}).get("tabs", [])
-        
-        for tab in contents:
-            if tab.get("tabRenderer", {}).get("title") == "Trending":
-                tab_content = tab.get("tabRenderer", {}).get("content", {})
-                section_list = tab_content.get("sectionListRenderer", {}).get("contents", [])
-                
-                for section in section_list:
-                    item_section = section.get("itemSectionRenderer", {})
-                    for item in item_section.get("contents", []):
-                        video = item.get("videoRenderer")
-                        if not video:
-                            continue
-                        
-                        video_id = video.get("videoId")
-                        title_runs = video.get("title", {}).get("runs", [])
-                        title = title_runs[0].get("text", "") if title_runs else ""
-                        
-                        owner_runs = video.get("ownerText", {}).get("runs", [])
-                        channel_name = owner_runs[0].get("text", "") if owner_runs else "یوتیوب"
-                        
-                        length_text = video.get("lengthText", {}).get("simpleText", "نامشخص")
-                        thumbnails = video.get("thumbnail", {}).get("thumbnails", [])
-                        thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
-                        
-                        views_text = video.get("viewCountText", {}).get("simpleText", "")
-                        
-                        if video_id and title:
-                            videos.append({
-                                "video_id": video_id,
-                                "title": title,
-                                "channel": channel_name,
-                                "duration": length_text,
-                                "thumbnail": thumbnail_url,
-                                "url": f"https://www.youtube.com/watch?v={video_id}",
-                                "views": views_text,
-                            })
-                        
-                        if len(videos) >= max_results:
-                            break
-                    
-                    if len(videos) >= max_results:
-                        break
-                
-                break
-        
+        if data:
+            _walk_video_renderers(data, videos, max_results)
+
+        if not videos:
+            videos = _fallback_regex_extract(html, max_results)
+
         return videos
     except Exception as e:
         print(f"Error fetching trending videos: {e}")
@@ -92,72 +159,18 @@ def search_youtube_videos(query: str, max_results: int = 10):
         return get_trending_youtube_videos(max_results)
 
     encoded_query = urllib.parse.quote(query)
-    url = f"https://www.youtube.com/results?search_query={encoded_query}"
+    url = f"https://www.youtube.com/results?search_query={encoded_query}&hl=fa"
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7",
-    }
-
-    req = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=10) as response:
-            html = response.read().decode("utf-8")
+        html = _fetch_html(url)
+        data = _get_yt_initial_data(html)
 
-        match = re.search(r"var ytInitialData = ({.*?});</script>", html)
-        if not match:
-            match = re.search(r"window\[\"ytInitialData\"\] = ({.*?});", html)
-
-        if not match:
-            return []
-
-        data = json.loads(match.group(1))
         videos = []
+        if data:
+            _walk_video_renderers(data, videos, max_results)
 
-        contents = (
-            data.get("contents", {})
-            .get("twoColumnSearchResultsRenderer", {})
-            .get("primaryContents", {})
-            .get("sectionListRenderer", {})
-            .get("contents", [])
-        )
-
-        for item in contents:
-            item_section = item.get("itemSectionRenderer", {})
-            for video in item_section.get("contents", []):
-                video_data = video.get("videoRenderer")
-                if not video_data:
-                    continue
-
-                video_id = video_data.get("videoId")
-                title_runs = video_data.get("title", {}).get("runs", [])
-                title = title_runs[0].get("text", "") if title_runs else ""
-
-                owner_runs = video_data.get("ownerText", {}).get("runs", [])
-                channel_name = owner_runs[0].get("text", "") if owner_runs else "یوتیوب"
-
-                length_text = video_data.get("lengthText", {}).get("simpleText", "نامشخص")
-                thumbnails = video_data.get("thumbnail", {}).get("thumbnails", [])
-                thumbnail_url = thumbnails[-1]["url"] if thumbnails else f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
-                
-                views_text = video_data.get("viewCountText", {}).get("simpleText", "")
-
-                if video_id and title:
-                    videos.append({
-                        "video_id": video_id,
-                        "title": title,
-                        "channel": channel_name,
-                        "duration": length_text,
-                        "thumbnail": thumbnail_url,
-                        "url": f"https://www.youtube.com/watch?v={video_id}",
-                        "views": views_text,
-                    })
-
-                if len(videos) >= max_results:
-                    break
-
-            if len(videos) >= max_results:
-                break
+        if not videos:
+            videos = _fallback_regex_extract(html, max_results)
 
         return videos
     except Exception as e:
