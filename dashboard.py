@@ -10,7 +10,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 TABS = [
     {"key": "content-analyzer", "label": "تحلیل محتوا", "icon": "📊",
      "endpoint": "dashboard.overview", "params": {"tab": "content-analyzer"},
-     "placeholder": ""},
+     "placeholder": "این بخش محتوای یک یا چند URL را واکشی و از نظر SEO تحلیل می‌کند - به‌زودی."},
     {"key": "youtube-research", "label": "پژوهش یوتیوب", "icon": "🎥",
      "endpoint": "dashboard.overview", "params": {"tab": "youtube-research"},
      "placeholder": ""},
@@ -131,104 +131,6 @@ def summarize_custom():
     # خلاصه‌سازی با LLM
     summary = summarize_custom_text(text, prompt, current_user)
     return jsonify({"summary": summary})
-
-
-@dashboard_bp.route("/dashboard/analyze/content", methods=["POST"])
-@login_required
-def analyze_content():
-    """
-    تحلیل محتوای متنی از نظر SEO
-    """
-    data = request.get_json() or {}
-    text = data.get("text", "").strip()
-    source_type = data.get("source_type", "text")  # text, url
-    url = data.get("url", "").strip()
-
-    if source_type == "text" and not text:
-        return jsonify({"error": "متن برای تحلیل ارسال نشده است."}), 400
-    
-    if source_type == "url" and not url:
-        return jsonify({"error": "لینک ارسال نشده است."}), 400
-
-    # اگر منبع URL باشد
-    if source_type == "url":
-        from summarizer_service import extract_article_content
-        content = extract_article_content(url)
-        if not content:
-            return jsonify({"error": "امکان استخراج محتوای مقاله وجود نداشت."}), 400
-        text = content
-
-    # تحلیل محتوا با LLM
-    analysis = analyze_content_text(text, current_user)
-    return jsonify({"analysis": analysis})
-
-
-def analyze_content_text(text: str, user) -> str:
-    """
-    تحلیل محتوای متنی از نظر SEO با استفاده از LLM تنظیم شده کاربر
-    """
-    from extensions import db
-    from models import Provider, ModelEntry
-    from crypto_utils import decrypt_value
-    
-    # دریافت تنظیمات LLM کاربر
-    active_model = (
-        ModelEntry.query.join(Provider)
-        .filter(Provider.user_id == user.id, ModelEntry.is_active == True)
-        .first()
-    )
-
-    if not active_model:
-        active_model = (
-            ModelEntry.query.join(Provider)
-            .filter(Provider.user_id == user.id)
-            .first()
-        )
-
-    if not active_model or not active_model.provider:
-        return "🔑 هیچ کلید API یا مدلی در بخش «مدیریت API Key» تنظیم نشده است. لطفاً ابتدا از منوی سمت راست وارد «مدیریت API Key» شوید و کلید و مدل خود را ثبت کنید."
-
-    provider = active_model.provider
-    api_key = decrypt_value(provider.api_key_encrypted)
-    base_url = provider.base_url
-    model_id = active_model.model_id
-
-    # محدود کردن طول متن
-    max_chars = 12000
-    truncated_text = text[:max_chars]
-
-    try:
-        from langchain_openai import ChatOpenAI
-        from langchain_core.messages import SystemMessage, HumanMessage
-
-        kwargs = {
-            "api_key": api_key,
-            "model": model_id,
-            "temperature": 0.3
-        }
-        if base_url:
-            kwargs["base_url"] = base_url
-
-        llm = ChatOpenAI(**kwargs)
-        
-        messages = [
-            SystemMessage(
-                content="""شما یک کارشناس حرفه‌ای سئو (SEO) هستید. متن زیر را از نظر موارد زیر تحلیل کنید:
-
-1. **کیفیت محتوا**: آیا محتوا مفید و ارزشمند است؟
-2. **ساختار و خوانایی**: آیا ساختار متن مناسب است؟ (تیترها، پاراگراف‌ها، نقاط قوت و ضعف)
-3. **کلمات کلیدی**: کلمات کلیدی اصلی و فرعی را شناسایی کنید. آیا بهینه‌سازی شده‌اند؟
-4. **طول محتوا**: آیا طول متن مناسب است؟
-5. **پیشنهادات بهبود**: چه پیشنهاداتی برای بهبود محتوا دارید؟
-
-لطفاً تحلیل را به صورت ساختاریافته و با تیترهای مناسب به زبان فارسی ارائه دهید."""
-            ),
-            HumanMessage(content=f"لطفاً متن زیر را از نظر SEO تحلیل کنید:\n\n{truncated_text}"),
-        ]
-        response = llm.invoke(messages)
-        return response.content
-    except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
 
 
 def summarize_custom_text(text: str, prompt: str, user) -> str:
