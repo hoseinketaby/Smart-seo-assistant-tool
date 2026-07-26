@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 
 from youtube_service import search_youtube_videos, summarize_youtube_video_text
 from google_service import search_duckduckgo, search_google_html
-from summarizer_service import summarize_article, summarize_text
+from summarizer_service import summarize_article
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
