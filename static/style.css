@@ -8,19 +8,19 @@
   --bg-sidebar: #10141f;    /* سایدبار و ورودی‌های تیره‌تر */
   --border-color: #232a3d;
 
-  --text-main: #eef1f7;
-  --text-muted: #8891a8;
-  --text-dim: #5b6480;
+  --text-main: #000000;     /* تغییر: متن اصلی به مشکی */
+  --text-muted: #2d3748;    /* تغییر: متن کم‌رنگ‌تر به خاکستری تیره */
+  --text-dim: #4a5568;      /* تغییر: متن بسیار کم‌رنگ به خاکستری */
 
   --accent: #3b6ef6;
   --accent-ink: #ffffff;    /* رنگ متن روی پس‌زمینه‌ی آبی */
 
   --error-bg: rgba(251, 113, 133, 0.08);
-  --error-text: #fda4af;
+  --error-text: #dc2626;    /* تغییر: متن خطا به قرمز تیره برای خوانایی بهتر */
   --error-border: rgba(251, 113, 133, 0.35);
 
   --success-bg: rgba(16, 185, 129, 0.12);
-  --success-text: #6ee7b7;
+  --success-text: #065f46;  /* تغییر: متن موفقیت به سبز تیره */
   --success-border: rgba(16, 185, 129, 0.35);
 
   --font-body: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
@@ -284,6 +284,7 @@ a {
   margin-right: 260px;
   padding: 32px 40px;
   min-width: 0;
+  background-color: #000000; /* تغییر: پس‌زمینه مشکی برای بخش محتوا */
 }
 
 .main h1 {
