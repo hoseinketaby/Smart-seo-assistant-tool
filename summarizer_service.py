@@ -84,6 +84,50 @@ def summarize_article(url: str, title: str, user) -> str:
         return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
 
 
+def summarize_text(text: str, prompt: str, user) -> str:
+    """
+    خلاصه‌سازی متن سفارشی
+    """
+    # دریافت تنظیمات LLM کاربر
+    api_key, base_url, model_id, error_msg = get_active_user_llm_config(user.id)
+    
+    if error_msg:
+        return error_msg
+    
+    # محدود کردن طول متن
+    max_chars = 12000
+    truncated_text = text[:max_chars]
+    
+    try:
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import SystemMessage, HumanMessage
+        
+        kwargs = {
+            "api_key": api_key,
+            "model": model_id,
+            "temperature": 0.5
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        
+        llm = ChatOpenAI(**kwargs)
+        
+        # اگر پرامپت کاربر خالی بود، از پرامپت پیش‌فرض استفاده کن
+        if not prompt:
+            prompt = "لطفاً متن زیر را خلاصه‌سازی کنید. نکات کلیدی و اصلی را استخراج کرده و به زبان فارسی روان و جذاب ارائه دهید."
+
+        messages = [
+            SystemMessage(
+                content="شما یک دستیار حرفه‌ای خلاصه‌سازی متن هستید."
+            ),
+            HumanMessage(content=f"{prompt}\n\nمتن:\n{truncated_text}"),
+        ]
+        response = llm.invoke(messages)
+        return response.content
+    except Exception as e:
+        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
+
+
 def get_active_user_llm_config(user_id: int):
     """
     دریافت تنظیمات LLM فعال کاربر
