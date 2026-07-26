@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 
 from youtube_service import search_youtube_videos, summarize_youtube_video_text
 from google_service import search_duckduckgo, search_google_html
-from summarizer_service import summarize_article
+from summarizer_service import summarize_article, summarize_text
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -22,7 +22,7 @@ TABS = [
      "placeholder": ""},
     {"key": "summarizer", "label": "خلاصه‌ساز", "icon": "📝",
      "endpoint": "dashboard.overview", "params": {"tab": "summarizer"},
-     "placeholder": "این بخش همان خلاصه‌ساز محتوای وب/یوتیوب موجود است - در مرحله بعد منتقل می‌شود."},
+     "placeholder": ""},
     {"key": "api-keys", "label": "مدیریت API Key", "icon": "🔑",
      "endpoint": "model_config.index", "params": {},
      "placeholder": ""},
@@ -52,11 +52,9 @@ def overview(tab="content-analyzer"):
         yt_videos = search_youtube_videos(yt_query, max_results=10)
     
     elif tab == "google-research":
-        # روش دوم: جستجوی مستقیم گوگل (ممکن است محدود شود)
         google_results = search_google_html(google_query, max_results=10)
     
     elif tab == "duckduckgo-research":
-        # روش اول: جستجوی DuckDuckGo (پایدارتر)
         duckduckgo_results = search_duckduckgo(duckduckgo_query, max_results=10)
 
     return render_template(
@@ -102,3 +100,106 @@ def summarize_article_route():
 
     summary = summarize_article(url, title, current_user)
     return jsonify({"summary": summary})
+
+
+@dashboard_bp.route("/dashboard/custom/summarize", methods=["POST"])
+@login_required
+def summarize_custom():
+    """
+    خلاصه‌سازی متن سفارشی کاربر
+    """
+    data = request.get_json() or {}
+    text = data.get("text", "").strip()
+    prompt = data.get("prompt", "").strip()
+    source_type = data.get("source_type", "text")  # text, url, youtube
+    url = data.get("url", "").strip()
+
+    if source_type == "text" and not text:
+        return jsonify({"error": "متن برای خلاصه‌سازی ارسال نشده است."}), 400
+    
+    if source_type in ["url", "youtube"] and not url:
+        return jsonify({"error": "لینک ارسال نشده است."}), 400
+
+    # اگر منبع یوتیوب باشد
+    if source_type == "youtube":
+        from youtube_service import get_youtube_transcript
+        transcript = get_youtube_transcript(url)
+        if not transcript:
+            return jsonify({"error": "امکان استخراج زیرنویس از ویدیو وجود نداشت."}), 400
+        text = transcript
+
+    # اگر منبع URL باشد
+    elif source_type == "url":
+        from summarizer_service import extract_article_content
+        content = extract_article_content(url)
+        if not content:
+            return jsonify({"error": "امکان استخراج محتوای مقاله وجود نداشت."}), 400
+        text = content
+
+    # خلاصه‌سازی با LLM
+    summary = summarize_custom_text(text, prompt, current_user)
+    return jsonify({"summary": summary})
+
+
+def summarize_custom_text(text: str, prompt: str, user) -> str:
+    """
+    خلاصه‌سازی متن سفارشی با استفاده از LLM تنظیم شده کاربر
+    """
+    from extensions import db
+    from models import Provider, ModelEntry
+    from crypto_utils import decrypt_value
+    
+    # دریافت تنظیمات LLM کاربر
+    active_model = (
+        ModelEntry.query.join(Provider)
+        .filter(Provider.user_id == user.id, ModelEntry.is_active == True)
+        .first()
+    )
+
+    if not active_model:
+        active_model = (
+            ModelEntry.query.join(Provider)
+            .filter(Provider.user_id == user.id)
+            .first()
+        )
+
+    if not active_model or not active_model.provider:
+        return "🔑 هیچ کلید API یا مدلی در بخش «مدیریت API Key» تنظیم نشده است. لطفاً ابتدا از منوی سمت راست وارد «مدیریت API Key» شوید و کلید و مدل خود را ثبت کنید."
+
+    provider = active_model.provider
+    api_key = decrypt_value(provider.api_key_encrypted)
+    base_url = provider.base_url
+    model_id = active_model.model_id
+
+    # محدود کردن طول متن
+    max_chars = 12000
+    truncated_text = text[:max_chars]
+
+    try:
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import SystemMessage, HumanMessage
+
+        kwargs = {
+            "api_key": api_key,
+            "model": model_id,
+            "temperature": 0.5
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+
+        llm = ChatOpenAI(**kwargs)
+        
+        # اگر پرامپت کاربر خالی بود، از پرامپت پیش‌فرض استفاده کن
+        if not prompt:
+            prompt = "لطفاً متن زیر را خلاصه‌سازی کنید. نکات کلیدی و اصلی را استخراج کرده و به زبان فارسی روان و جذاب ارائه دهید."
+
+        messages = [
+            SystemMessage(
+                content="شما یک دستیار حرفه‌ای خلاصه‌سازی متن هستید."
+            ),
+            HumanMessage(content=f"{prompt}\n\nمتن:\n{truncated_text}"),
+        ]
+        response = llm.invoke(messages)
+        return response.content
+    except Exception as e:
+        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
