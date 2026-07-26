@@ -1,365 +1,558 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>داشبورد — دستیار SEO</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  
-  <!-- اضافه کردن Bootstrap برای استایل بهتر -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- اضافه کردن Font Awesome برای آیکون‌ها -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-  <div class="layout">
+/* ============================================================
+   Token system
+   ============================================================ */
+:root {
+  --bg: #0b1220;
+  --surface: #131b2e;
+  --surface-2: #1a2438;
+  --border: #253150;
+  --text: #e8ecf4;
+  --text-muted: #8891a8;
+  --text-dim: #5b6480;
+  --amber: #f2c14e;
 
-    <!-- Sidebar: tab navigation -->
-    <aside class="sidebar dashboard-sidebar">
-      <h2>🔎 دستیار SEO</h2>
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
 
-      <nav class="tab-nav">
-        {% for tab in tabs %}
-          <a href="{{ url_for(tab.endpoint, **tab.params) }}"
-             class="tab-link {% if tab.key == active_tab %}active{% endif %}">
-            <span class="tab-icon">{{ tab.icon }}</span>
-            <span class="tab-label">{{ tab.label }}</span>
-          </a>
-        {% endfor %}
-      </nav>
+* {
+  box-sizing: border-box;
+}
 
-      <div class="sidebar-footer">
-        <p class="user-email">{{ user.email }}</p>
-        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج</a>
-      </div>
-    </aside>
+html, body {
+  margin: 0;
+  padding: 0;
+}
 
-    <!-- Main content: active tab -->
-    <main class="main">
-      <h1>{{ active_tab_info.icon }} {{ active_tab_info.label }}</h1>
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
 
-      {% block tab_content %}
-        {% if active_tab == 'youtube-research' %}
-          <!-- بخش یوتیوب -->
-          <div class="youtube-research-section">
-            <!-- باکس جستجو -->
-            <div class="search-box-container">
-              <form method="GET" action="{{ url_for('dashboard.overview', tab='youtube-research') }}" class="search-form">
-                <div class="input-group">
-                  <input type="text" 
-                         name="q" 
-                         class="form-control" 
-                         placeholder="جستجوی ویدیو در یوتیوب..." 
-                         value="{{ yt_query if yt_query else '' }}">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> جستجو
-                  </button>
-                </div>
-              </form>
-              <div class="search-info-badge">
-                {% if yt_query %}
-                  <span>نتایج جستجو برای: "{{ yt_query }}"</span>
-                {% else %}
-                  <span>🔥 ویدیوهای پرطرفدار امروز</span>
-                {% endif %}
-              </div>
-            </div>
+/* subtle grain texture over the dark background, ambient not decorative */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
-            <!-- عنوان برترین ویدیوها -->
-            <div class="section-title">
-              {% if yt_query %}
-                <h3>نتایج جستجو برای: "{{ yt_query }}"</h3>
-              {% else %}
-                <h3>🔥 ۱۰ ویدیوی برتر یوتیوب</h3>
-                <p>پرطرفدارترین ویدیوهای امروز</p>
-              {% endif %}
-            </div>
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
 
-            <!-- نمایش نتایج ویدیوها -->
-            <div class="videos-grid">
-              {% if yt_videos %}
-                <div class="row">
-                  {% for video in yt_videos %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                      <div class="video-card">
-                        <div class="video-thumbnail">
-                          <img src="{{ video.thumbnail }}" alt="{{ video.title }}" loading="lazy">
-                          <span class="video-duration">{{ video.duration }}</span>
-                        </div>
-                        <div class="video-info">
-                          <h5 class="video-title">{{ video.title }}</h5>
-                          <p class="video-channel">{{ video.channel }}</p>
-                          {% if video.views %}
-                            <p class="video-views"><i class="far fa-eye"></i> {{ video.views }}</p>
-                          {% endif %}
-                        </div>
-                        <div class="video-actions">
-                          <a href="{{ video.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                            <i class="fab fa-youtube"></i> تماشا
-                          </a>
-                          <button class="btn btn-primary btn-sm summarize-btn" 
-                                  data-video-id="{{ video.video_id }}"
-                                  data-video-title="{{ video.title }}">
-                            <i class="fas fa-file-alt"></i> خلاصه‌سازی
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="tab-placeholder">
-                  <p>هیچ ویدیویی یافت نشد. لطفاً جستجوی دیگری انجام دهید.</p>
-                </div>
-              {% endif %}
-            </div>
-          </div>
+/* ============================================================
+   Header
+   ============================================================ */
+.site-header {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 72px 24px 40px;
+  position: relative;
+  z-index: 1;
+}
 
-        {% elif active_tab == 'google-research' %}
-          <!-- بخش گوگل - روش دوم (ممکن است محدود شود) -->
-          <div class="google-research-section">
-            <!-- باکس جستجو -->
-            <div class="search-box-container">
-              <form method="GET" action="{{ url_for('dashboard.overview', tab='google-research') }}" class="search-form">
-                <div class="input-group">
-                  <input type="text" 
-                         name="gq" 
-                         class="form-control" 
-                         placeholder="جستجوی مقالات در گوگل..." 
-                         value="{{ google_query if google_query else '' }}">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> جستجو
-                  </button>
-                </div>
-              </form>
-              <div class="search-info-badge">
-                <span style="background: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-border);">
-                  ⚠️ ممکن است به دلیل محدودیت گوگل، نتایج نمایش داده نشود
-                </span>
-              </div>
-            </div>
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
 
-            <!-- عنوان برترین مقالات -->
-            <div class="section-title">
-              {% if google_query %}
-                <h3>نتایج جستجو برای: "{{ google_query }}"</h3>
-              {% else %}
-                <h3>🔥 ۱۰ مقاله برتر گوگل</h3>
-                <p>پرطرفدارترین مقالات امروز</p>
-              {% endif %}
-            </div>
+.site-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700;
+  line-height: 1.08;
+  margin: 0 0 20px;
+  letter-spacing: -0.01em;
+}
 
-            <!-- نمایش نتایج مقالات گوگل -->
-            <div class="google-results">
-              {% if google_results %}
-                <div class="row">
-                  {% for result in google_results %}
-                    <div class="col-12 mb-3">
-                      <div class="result-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                        <h5 style="font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 8px;">
-                          <a href="{{ result.link }}" target="_blank" style="color: var(--accent); text-decoration: none;">
-                            {{ result.title }}
-                          </a>
-                        </h5>
-                        {% if result.domain %}
-                          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0;">{{ result.domain }}</p>
-                        {% endif %}
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0;">
-                          {{ result.snippet }}
-                        </p>
-                        <div style="margin-top: 12px;">
-                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="fas fa-external-link-alt"></i> مطالعه
-                          </a>
-                          {% if result.source %}
-                            <span style="background: var(--bg-sidebar); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; margin-right: 8px; color: var(--text-muted); border: 1px solid var(--border-color);">
-                              {{ result.source }}
-                            </span>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="tab-placeholder">
-                  <p>هیچ نتیجه‌ای از گوگل یافت نشد.</p>
-                  <p style="color: var(--text-muted); font-size: 0.9rem;">گوگل ممکن است درخواست شما را محدود کرده باشد. از تب DuckDuckGo استفاده کنید.</p>
-                </div>
-              {% endif %}
-            </div>
-          </div>
+.subhead {
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 620px;
+  margin: 0;
+}
 
-        {% elif active_tab == 'duckduckgo-research' %}
-          <!-- بخش DuckDuckGo - روش اول (پایدارتر) -->
-          <div class="duckduckgo-research-section">
-            <!-- باکس جستجو -->
-            <div class="search-box-container">
-              <form method="GET" action="{{ url_for('dashboard.overview', tab='duckduckgo-research') }}" class="search-form">
-                <div class="input-group">
-                  <input type="text" 
-                         name="dq" 
-                         class="form-control" 
-                         placeholder="جستجو با DuckDuckGo..." 
-                         value="{{ duckduckgo_query if duckduckgo_query else '' }}">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> جستجو
-                  </button>
-                </div>
-              </form>
-              <div class="search-info-badge">
-                <span style="background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border);">
-                  ✅ بدون محدودیت - پایدار
-                </span>
-              </div>
-            </div>
+.subhead span {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
 
-            <!-- عنوان برترین مقالات -->
-            <div class="section-title">
-              {% if duckduckgo_query %}
-                <h3>نتایج جستجو برای: "{{ duckduckgo_query }}"</h3>
-              {% else %}
-                <h3>🦆 ۱۰ مقاله برتر DuckDuckGo</h3>
-                <p>پرطرفدارترین مقالات امروز</p>
-              {% endif %}
-            </div>
+/* ============================================================
+   KPI strip
+   ============================================================ */
+.kpi-strip {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background-color: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
 
-            <!-- نمایش نتایج DuckDuckGo -->
-            <div class="duckduckgo-results">
-              {% if duckduckgo_results %}
-                <div class="row">
-                  {% for result in duckduckgo_results %}
-                    <div class="col-12 mb-3">
-                      <div class="result-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-                        <h5 style="font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 8px;">
-                          <a href="{{ result.link }}" target="_blank" style="color: var(--accent); text-decoration: none;">
-                            {{ result.title }}
-                          </a>
-                        </h5>
-                        {% if result.domain %}
-                          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0;">{{ result.domain }}</p>
-                        {% endif %}
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 8px 0;">
-                          {{ result.snippet }}
-                        </p>
-                        <div style="margin-top: 12px;">
-                          <a href="{{ result.link }}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="fas fa-external-link-alt"></i> مطالعه
-                          </a>
-                          {% if result.source %}
-                            <span style="background: var(--bg-sidebar); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; margin-right: 8px; color: var(--text-muted); border: 1px solid var(--border-color);">
-                              {{ result.source }}
-                            </span>
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="tab-placeholder">
-                  <p>هیچ نتیجه‌ای یافت نشد.</p>
-                  <p style="color: var(--text-muted); font-size: 0.9rem;">لطفاً جستجوی دیگری انجام دهید.</p>
-                </div>
-              {% endif %}
-            </div>
-          </div>
+.kpi {
+  background-color: var(--surface);
+  padding: 20px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-        {% else %}
-          <!-- سایر تب‌ها -->
-          <div class="tab-placeholder">
-            <p>{{ active_tab_info.placeholder }}</p>
-          </div>
-        {% endif %}
-      {% endblock %}
-    </main>
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 
-  </div>
+.kpi-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
 
-  <!-- مودال نمایش خلاصه -->
-  <div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;">
-        <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 20px 25px;">
-          <h5 class="modal-title" style="color: var(--text-main); font-weight: 700;">
-            <i class="fas fa-file-alt"></i> خلاصه ویدیو
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
-        </div>
-        <div class="modal-body" id="summaryContent" style="padding: 25px; max-height: 70vh; overflow-y: auto;">
-          <div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
-            در حال پردازش...
-          </div>
-        </div>
-        <div class="modal-footer" style="border-top: 1px solid var(--border-color); padding: 15px 25px;">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: var(--bg-sidebar); color: var(--text-muted); border: 1px solid var(--border-color);">
-            بستن
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+.kpi-unit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
 
-  <!-- اسکریپت‌های مورد نیاز -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // رویداد برای دکمه‌های خلاصه‌سازی
-      document.querySelectorAll('.summarize-btn').forEach(button => {
-        button.addEventListener('click', function() {
-          const videoId = this.dataset.videoId;
-          const videoTitle = this.dataset.videoTitle;
-          
-          // نمایش مودال
-          const modal = new bootstrap.Modal(document.getElementById('summaryModal'));
-          modal.show();
-          
-          // نمایش متن بارگذاری
-          document.getElementById('summaryContent').innerHTML = 
-            `<div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
-              در حال خلاصه‌سازی ویدیو "${videoTitle}"...
-            </div>`;
-          
-          // ارسال درخواست به سرور
-          fetch('/dashboard/youtube/summarize', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ video_id: videoId }),
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.error) {
-              document.getElementById('summaryContent').innerHTML = 
-                `<div class="status error">${data.error}</div>`;
-            } else {
-              // تبدیل خلاصه به HTML با حفظ خطوط و تیترها
-              const summaryHtml = data.summary
-                .split('\n')
-                .map(line => line.trim())
-                .filter(line => line)
-                .map(line => {
-                  if (line.startsWith('#')) {
-                    const level = line.match(/^#+/)[0].length;
-                    const text = line.replace(/^#+\s*/, '');
-                    return `<h${Math.min(level, 6)} style="color: var(--text-main); margin-top: 15px; margin-bottom: 10px;">${text}</h${Math.min(level, 6)}>`;
-                  }
-                  return `<p style="color: var(--text-muted); line-height: 1.8;">${line}</p>`;
-                })
-                .join('');
-              
-              document.getElementById('summaryContent').innerHTML = 
-                `<div class="summary-result">${summaryHtml}</div>`;
-            }
-          })
-          .catch(error => {
-            document.getElementById('summaryContent').innerHTML = 
-              `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
-          });
-        });
-      });
-    });
-  </script>
-</body>
-</html>
+/* ============================================================
+   Main layout / panels
+   ============================================================ */
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 28px 24px;
+  margin-bottom: 24px;
+}
+
+.panel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.panel-row .panel {
+  margin-bottom: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.panel h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.panel-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* View toggle (daily / monthly) */
+.view-toggle {
+  display: flex;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.toggle-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.toggle-btn.active {
+  background-color: var(--amber);
+  color: #1a1300;
+  font-weight: 700;
+}
+
+.toggle-btn:hover:not(.active) {
+  color: var(--text);
+}
+
+/* ============================================================
+   Charts
+   ============================================================ */
+.chart-wrap {
+  position: relative;
+  height: 320px;
+}
+
+.chart-wrap--tall {
+  height: 420px;
+}
+
+.chart-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   Generation mix ranked list
+   ============================================================ */
+.mix-share-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mix-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 90px;
+  align-items: center;
+  gap: 16px;
+}
+
+.mix-row .mix-name {
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mix-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.mix-bar-track {
+  height: 8px;
+  background-color: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mix-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.mix-row .mix-pct {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.site-footer {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer p {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 860px) {
+  .panel-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .site-header {
+    padding: 48px 20px 32px;
+  }
+}
+
+@media (max-width: 520px) {
+  .kpi-strip {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 16px 32px;
+  }
+
+  main {
+    padding: 0 16px 60px;
+  }
+
+  .panel {
+    padding: 20px 18px 18px;
+  }
+
+  .mix-row {
+    grid-template-columns: 110px 1fr 60px;
+    gap: 10px;
+  }
+
+  .chart-wrap {
+    height: 260px;
+  }
+
+  .chart-wrap--tall {
+    height: 320px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+  }
+}
+
+/* ============================================================
+   Top navigation
+   ============================================================ */
+.topnav {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.topnav-brand {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.topnav-links {
+  display: flex;
+  gap: 4px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.topnav-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.topnav-link:hover {
+  color: var(--text);
+}
+
+.topnav-link.active {
+  background-color: var(--amber);
+  color: #1a1300;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .topnav {
+    padding: 18px 16px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* ============================================================
+   Forecast page
+   ============================================================ */
+.upload-panel .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-field input[type="text"],
+.form-field input[type="number"],
+.form-field select {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.form-field input[type="file"] {
+  background-color: var(--surface-2);
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 16px 12px;
+  font-size: 13px;
+}
+
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
+.model-choice-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.model-choice {
+  flex: 1;
+  min-width: 140px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.model-choice input {
+  display: none;
+}
+
+.model-choice-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+
+.model-choice-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
+}
+
+.model-choice.selected {
+  border-color: var(--amber);
+  background-color: rgba(242, 193, 78, 0.08);
+}
+
+#forecastBtn {
+  background-color: var(--amber);
+  color: #1a1300;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+#forecastBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+#forecastBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-banner {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.status-banner.info {
+  background-color: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+.status-banner.error {
+  background-color: rgba(251, 113, 133, 0.08);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  color: #fda4af;
+}
+
+.status-banner.hidden {
+  display: none;
+}
+
+.results-panel.hidden {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
