@@ -10,7 +10,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 TABS = [
     {"key": "content-analyzer", "label": "تحلیل محتوا", "icon": "📊",
      "endpoint": "dashboard.overview", "params": {"tab": "content-analyzer"},
-     "placeholder": "این بخش محتوای یک یا چند URL را واکشی و از نظر SEO تحلیل می‌کند - به‌زودی."},
+     "placeholder": "محتوای متنی یا صفحات وب را از نظر SEO تحلیل کنید."},
     {"key": "youtube-research", "label": "پژوهش یوتیوب", "icon": "🎥",
      "endpoint": "dashboard.overview", "params": {"tab": "youtube-research"},
      "placeholder": ""},
@@ -32,6 +32,21 @@ TABS = [
 ]
 
 TABS_BY_KEY = {t["key"]: t for t in TABS}
+
+
+def _extract_text_from_html(html_content: str) -> str:
+    """
+    استخراج متن خالص از رشته HTML
+    """
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+    for tag in soup(['script', 'style', 'nav', 'header', 'footer', 'aside']):
+        tag.decompose()
+    paragraphs = soup.find_all('p')
+    content = " ".join([p.get_text(strip=True) for p in paragraphs])
+    if len(content) < 100:
+        content = soup.get_text(strip=True)
+    return content
 
 
 @dashboard_bp.route("/dashboard")
@@ -88,9 +103,6 @@ def summarize_youtube():
 @dashboard_bp.route("/dashboard/article/summarize", methods=["POST"])
 @login_required
 def summarize_article_route():
-    """
-    خلاصه‌سازی مقالات وب
-    """
     data = request.get_json() or {}
     url = data.get("url")
     title = data.get("title", "مقاله")
@@ -105,14 +117,12 @@ def summarize_article_route():
 @dashboard_bp.route("/dashboard/custom/summarize", methods=["POST"])
 @login_required
 def summarize_custom():
-    """
-    خلاصه‌سازی متن سفارشی کاربر
-    """
     data = request.get_json() or {}
     text = data.get("text", "").strip()
     prompt = data.get("prompt", "").strip()
-    source_type = data.get("source_type", "text")  # text, url
+    source_type = data.get("source_type", "text")
     url = data.get("url", "").strip()
+    html_content = data.get("html", "").strip()
 
     if source_type == "text" and not text:
         return jsonify({"error": "متن برای خلاصه‌سازی ارسال نشده است."}), 400
@@ -120,7 +130,9 @@ def summarize_custom():
     if source_type == "url" and not url:
         return jsonify({"error": "لینک ارسال نشده است."}), 400
 
-    # اگر منبع URL باشد
+    if source_type == "html" and not html_content:
+        return jsonify({"error": "کد HTML ارسال نشده است."}), 400
+
     if source_type == "url":
         from summarizer_service import extract_article_content
         content = extract_article_content(url)
@@ -128,20 +140,18 @@ def summarize_custom():
             return jsonify({"error": "امکان استخراج محتوای مقاله وجود نداشت."}), 400
         text = content
 
-    # خلاصه‌سازی با LLM
+    if source_type == "html":
+        text = _extract_text_from_html(html_content)
+
     summary = summarize_custom_text(text, prompt, current_user)
     return jsonify({"summary": summary})
 
 
 def summarize_custom_text(text: str, prompt: str, user) -> str:
-    """
-    خلاصه‌سازی متن سفارشی با استفاده از LLM تنظیم شده کاربر
-    """
     from extensions import db
     from models import Provider, ModelEntry
     from crypto_utils import decrypt_value
     
-    # دریافت تنظیمات LLM کاربر
     active_model = (
         ModelEntry.query.join(Provider)
         .filter(Provider.user_id == user.id, ModelEntry.is_active == True)
@@ -163,7 +173,6 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
     base_url = provider.base_url
     model_id = active_model.model_id
 
-    # محدود کردن طول متن
     max_chars = 12000
     truncated_text = text[:max_chars]
 
@@ -181,7 +190,6 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
 
         llm = ChatOpenAI(**kwargs)
         
-        # اگر پرامپت کاربر خالی بود، از پرامپت پیش‌فرض استفاده کن
         if not prompt:
             prompt = "لطفاً متن زیر را خلاصه‌سازی کنید. نکات کلیدی و اصلی را استخراج کرده و به زبان فارسی روان و جذاب ارائه دهید."
 
@@ -202,20 +210,21 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
 @dashboard_bp.route("/dashboard/content/analyze", methods=["POST"])
 @login_required
 def analyze_content():
-    """
-    تحلیل محتوا از نظر SEO — ورودی متن دستی یا لینک وب
-    """
     data = request.get_json() or {}
     text = data.get("text", "").strip()
     prompt = data.get("prompt", "").strip()
     source_type = data.get("source_type", "text")
     url = data.get("url", "").strip()
+    html_content = data.get("html", "").strip()
 
     if source_type == "text" and not text:
         return jsonify({"error": "متن برای تحلیل ارسال نشده است."}), 400
 
     if source_type == "url" and not url:
         return jsonify({"error": "لینک ارسال نشده است."}), 400
+
+    if source_type == "html" and not html_content:
+        return jsonify({"error": "کد HTML ارسال نشده است."}), 400
 
     if source_type == "url":
         from summarizer_service import extract_article_content
@@ -224,14 +233,14 @@ def analyze_content():
             return jsonify({"error": "امکان استخراج محتوای صفحه وجود نداشت."}), 400
         text = content
 
+    if source_type == "html":
+        text = _extract_text_from_html(html_content)
+
     analysis = analyze_content_text(text, prompt, current_user)
     return jsonify({"analysis": analysis})
 
 
 def analyze_content_text(text: str, prompt: str, user) -> str:
-    """
-    تحلیل محتوا با استفاده از LLM تنظیم‌شده کاربر
-    """
     from extensions import db
     from models import Provider, ModelEntry
     from crypto_utils import decrypt_value
