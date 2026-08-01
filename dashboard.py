@@ -5,6 +5,7 @@ from youtube_service import search_youtube_videos, summarize_youtube_video_text
 from google_service import search_duckduckgo, search_google_html
 from summarizer_service import summarize_article
 from llm_config import get_active_user_llm_config
+from keyword_service import get_related_keywords, ai_keyword_research
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -20,6 +21,12 @@ TABS = [
      "placeholder": ""},
     {"key": "duckduckgo-research", "label": "جستجو با DuckDuckGo", "icon": "🦆",
      "endpoint": "dashboard.overview", "params": {"tab": "duckduckgo-research"},
+     "placeholder": ""},
+    {"key": "keyword-research", "label": "جستجوی کلمات کلیدی", "icon": "📈",
+     "endpoint": "dashboard.overview", "params": {"tab": "keyword-research"},
+     "placeholder": ""},
+    {"key": "ai-keyword-research", "label": "جستجوی کلمات کلیدی با هوش مصنوعی", "icon": "✨",
+     "endpoint": "dashboard.overview", "params": {"tab": "ai-keyword-research"},
      "placeholder": ""},
     {"key": "summarizer", "label": "خلاصه‌ساز", "icon": "📝",
      "endpoint": "dashboard.overview", "params": {"tab": "summarizer"},
@@ -48,6 +55,9 @@ def overview(tab="content-analyzer"):
     google_query = request.args.get("gq", "").strip()
     duckduckgo_results = []
     duckduckgo_query = request.args.get("dq", "").strip()
+    keyword_query = request.args.get("kwq", "").strip()
+    keyword_results = []
+    keyword_error = None
 
     if tab == "youtube-research":
         yt_videos = search_youtube_videos(yt_query, max_results=10)
@@ -57,6 +67,9 @@ def overview(tab="content-analyzer"):
     
     elif tab == "duckduckgo-research":
         duckduckgo_results = search_duckduckgo(duckduckgo_query, max_results=10)
+
+    elif tab == "keyword-research":
+        keyword_results, keyword_error = get_related_keywords(keyword_query, max_results=30)
 
     return render_template(
         "dashboard/base.html",
@@ -70,6 +83,9 @@ def overview(tab="content-analyzer"):
         google_query=google_query,
         duckduckgo_results=duckduckgo_results,
         duckduckgo_query=duckduckgo_query,
+        keyword_results=keyword_results,
+        keyword_query=keyword_query,
+        keyword_error=keyword_error,
     )
 
 
@@ -101,6 +117,22 @@ def summarize_article_route():
 
     summary = summarize_article(url, title, current_user)
     return jsonify({"summary": summary})
+
+
+@dashboard_bp.route("/dashboard/keyword/ai-search", methods=["POST"])
+@login_required
+def ai_keyword_search():
+    """
+    جستجوی کلمات کلیدی با استفاده از هوش مصنوعی (بدون نیاز به API جستجوی کلمات کلیدی)
+    """
+    data = request.get_json() or {}
+    keyword = (data.get("keyword") or "").strip()
+
+    if not keyword:
+        return jsonify({"error": "کلمه کلیدی ارسال نشده است."}), 400
+
+    result = ai_keyword_research(keyword, current_user)
+    return jsonify({"result": result})
 
 
 @dashboard_bp.route("/dashboard/custom/summarize", methods=["POST"])
