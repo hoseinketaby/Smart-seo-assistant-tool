@@ -2,8 +2,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Provider, ModelEntry
+from models import Provider, ModelEntry, KeywordProvider
 from crypto_utils import encrypt_value
+from keyword_service import KEYWORD_PROVIDER_PRESETS
 
 model_config_bp = Blueprint("model_config", __name__, url_prefix="/dashboard/models")
 
@@ -57,10 +58,17 @@ def index():
         .order_by(Provider.created_at.asc())
         .all()
     )
+    keyword_providers = (
+        KeywordProvider.query.filter_by(user_id=current_user.id)
+        .order_by(KeywordProvider.created_at.asc())
+        .all()
+    )
     return render_template(
         "dashboard/models.html",
         providers=providers,
         presets=PROVIDER_PRESETS,
+        keyword_providers=keyword_providers,
+        keyword_presets=KEYWORD_PROVIDER_PRESETS,
         **_sidebar_context(),
     )
 
@@ -176,4 +184,74 @@ def delete_model(model_id):
     db.session.delete(entry)
     db.session.commit()
     flash("مدل حذف شد.", "info")
+    return redirect(url_for("model_config.index"))
+
+
+# ==================== ابزارهای جستجوی کلمات کلیدی ====================
+
+@model_config_bp.route("/keyword-providers/add", methods=["POST"])
+@login_required
+def add_keyword_provider():
+    preset_key = (request.form.get("kw_preset_key") or "").strip()
+    api_key = (request.form.get("kw_api_key") or "").strip()
+
+    if preset_key not in KEYWORD_PROVIDER_PRESETS:
+        flash("ابزار جستجوی کلمات کلیدی نامعتبر است.", "error")
+        return redirect(url_for("model_config.index"))
+
+    if not api_key:
+        flash("API key الزامی است.", "error")
+        return redirect(url_for("model_config.index"))
+
+    # اگر این اولین ابزار کلمات کلیدی کاربر است، به‌صورت خودکار فعال شود
+    existing_count = KeywordProvider.query.filter_by(user_id=current_user.id).count()
+    is_active = (existing_count == 0)
+
+    provider = KeywordProvider(
+        user_id=current_user.id,
+        preset_key=preset_key,
+        api_key_encrypted=encrypt_value(api_key),
+        is_active=is_active,
+    )
+    db.session.add(provider)
+    db.session.commit()
+    flash(f"ابزار «{KEYWORD_PROVIDER_PRESETS[preset_key]['label']}» اضافه شد.", "info")
+    return redirect(url_for("model_config.index"))
+
+
+@model_config_bp.route("/keyword-providers/<int:provider_id>/activate", methods=["POST"])
+@login_required
+def activate_keyword_provider(provider_id):
+    """تنظیم یک ابزار به‌عنوان ابزار فعال جستجوی کلمات کلیدی کاربر"""
+    providers = KeywordProvider.query.filter_by(user_id=current_user.id).all()
+    activated = None
+
+    for provider in providers:
+        if provider.id == provider_id:
+            provider.is_active = True
+            activated = provider
+        else:
+            provider.is_active = False
+
+    if not activated:
+        flash("ابزار پیدا نشد.", "error")
+        return redirect(url_for("model_config.index"))
+
+    db.session.commit()
+    label = KEYWORD_PROVIDER_PRESETS.get(activated.preset_key, {}).get("label", activated.preset_key)
+    flash(f"«{label}» به‌عنوان ابزار فعال جستجوی کلمات کلیدی تنظیم شد.", "info")
+    return redirect(url_for("model_config.index"))
+
+
+@model_config_bp.route("/keyword-providers/<int:provider_id>/delete", methods=["POST"])
+@login_required
+def delete_keyword_provider(provider_id):
+    provider = KeywordProvider.query.filter_by(id=provider_id, user_id=current_user.id).first()
+    if not provider:
+        flash("ابزار پیدا نشد.", "error")
+        return redirect(url_for("model_config.index"))
+
+    db.session.delete(provider)
+    db.session.commit()
+    flash("ابزار حذف شد.", "info")
     return redirect(url_for("model_config.index"))
