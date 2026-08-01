@@ -507,6 +507,172 @@
             </div>
           </div>
 
+        {% elif active_tab == 'keyword-research' %}
+          <!-- بخش جستجوی کلمات کلیدی (داده‌های واقعی) -->
+          <div class="keyword-research-section">
+            <div class="search-box-container">
+              <form method="GET" action="{{ url_for('dashboard.overview', tab='keyword-research') }}" class="search-form">
+                <div class="input-group">
+                  <input type="text"
+                         name="kwq"
+                         class="form-control"
+                         placeholder="یک کلمه کلیدی وارد کنید، مثلاً: خرید کفش ورزشی"
+                         value="{{ keyword_query if keyword_query else '' }}">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> جستجو
+                  </button>
+                </div>
+              </form>
+              <div class="search-info-badge">
+                <span>📊 میزان جستجو، کلمات مرتبط، سختی و CPC از سرویس Mangools (KWFinder)</span>
+              </div>
+            </div>
+
+            {% if keyword_error %}
+              <div class="status error" style="margin-top: 20px;">{{ keyword_error }}</div>
+            {% elif keyword_query and keyword_results %}
+              <div class="section-title">
+                <h3>نتایج برای: "{{ keyword_query }}"</h3>
+                <p>{{ keyword_results|length }} کلمه کلیدی مرتبط یافت شد</p>
+              </div>
+
+              <div class="keyword-results-table" style="overflow-x: auto; margin-top: 15px;">
+                <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 12px; overflow: hidden;">
+                  <thead>
+                    <tr style="background: var(--bg-sidebar); text-align: right;">
+                      <th style="padding: 12px 16px; color: var(--text-main);">کلمه کلیدی</th>
+                      <th style="padding: 12px 16px; color: var(--text-main);">میزان جستجوی ماهانه</th>
+                      <th style="padding: 12px 16px; color: var(--text-main);">میزان سختی (KD)</th>
+                      <th style="padding: 12px 16px; color: var(--text-main);">CPC ($)</th>
+                      <th style="padding: 12px 16px; color: var(--text-main);">رقابت تبلیغاتی (PPC)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for kw in keyword_results %}
+                      <tr style="border-top: 1px solid var(--border-color);">
+                        <td style="padding: 10px 16px; color: var(--text-main); font-weight: 600;">{{ kw.keyword }}</td>
+                        <td style="padding: 10px 16px; color: var(--text-muted);">
+                          {{ kw.search_volume if kw.search_volume is not none else "نامشخص" }}
+                        </td>
+                        <td style="padding: 10px 16px; color: var(--text-muted);">
+                          {% if kw.difficulty is not none %}
+                            {{ kw.difficulty }} / 100
+                          {% else %}
+                            <span style="color: var(--text-dim);">نیاز به بررسی SERP</span>
+                          {% endif %}
+                        </td>
+                        <td style="padding: 10px 16px; color: var(--text-muted);">{{ kw.cpc if kw.cpc is not none else "-" }}</td>
+                        <td style="padding: 10px 16px; color: var(--text-muted);">{{ kw.ppc if kw.ppc is not none else "-" }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% elif keyword_query %}
+              <div class="tab-placeholder">
+                <p>هیچ کلمه کلیدی مرتبطی یافت نشد. لطفاً کلمه کلیدی دیگری را امتحان کنید.</p>
+              </div>
+            {% else %}
+              <div class="tab-placeholder">
+                <p>یک کلمه کلیدی وارد کنید تا میزان جستجو، کلمات مرتبط و میزان سختی آن را ببینید.</p>
+              </div>
+            {% endif %}
+          </div>
+
+        {% elif active_tab == 'ai-keyword-research' %}
+          <!-- بخش جستجوی کلمات کلیدی با هوش مصنوعی -->
+          <div class="ai-keyword-research-section">
+            <div class="search-box-container">
+              <h4 style="color: var(--text-main); margin-bottom: 15px;">🤖 تحلیل کلمه کلیدی با هوش مصنوعی</h4>
+
+              <label style="color: var(--text-muted); display: block; margin-bottom: 8px;">کلمه کلیدی:</label>
+              <input type="text" id="aiKeywordInput" class="form-control"
+                     placeholder="مثلاً: خرید کفش ورزشی"
+                     style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 8px; width: 100%;">
+
+              <div style="margin-top: 8px; color: var(--text-dim); font-size: 0.85rem;">
+                💡 این تب از مدل هوش مصنوعی تنظیم‌شده‌ی شما (یا DeepSeek پیش‌فرض) برای برآورد کلمات
+                مرتبط، حجم جستجو و سختی استفاده می‌کند. این مقادیر تخمینی هستند، نه داده‌ی دقیق گوگل.
+              </div>
+
+              <div style="text-align: center; margin-top: 20px;">
+                <button id="aiKeywordBtn" class="btn btn-primary" style="padding: 12px 40px; font-size: 1rem;">
+                  <i class="fas fa-magic"></i> تحلیل با هوش مصنوعی
+                </button>
+              </div>
+            </div>
+
+            <div id="aiKeywordResult" style="display: none; margin-top: 30px;">
+              <div class="search-box-container">
+                <h4 style="color: var(--text-main); margin-bottom: 15px;">📄 نتیجه تحلیل</h4>
+                <div id="aiKeywordResultContent" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; max-height: 600px; overflow-y: auto; color: var(--text-muted); line-height: 1.8;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              function formatAiKeywordResult(text) {
+                return text
+                  .split('\n')
+                  .map(line => line.trim())
+                  .filter(line => line)
+                  .map(line => {
+                    if (line.startsWith('#')) {
+                      const level = line.match(/^#+/)[0].length;
+                      const cleanText = line.replace(/^#+\s*/, '');
+                      return `<h${Math.min(level, 6)} style="color: var(--text-main); margin-top: 15px; margin-bottom: 10px;">${cleanText}</h${Math.min(level, 6)}>`;
+                    }
+                    if (line.startsWith('- ') || line.startsWith('• ')) {
+                      return `<li style="color: var(--text-muted); line-height: 1.8; margin-right: 20px;">${line.substring(2)}</li>`;
+                    }
+                    if (/^\d+[\.)\-]/.test(line)) {
+                      return `<li style="color: var(--text-muted); line-height: 1.8; margin-right: 20px;">${line}</li>`;
+                    }
+                    return `<p style="color: var(--text-muted); line-height: 1.8;">${line}</p>`;
+                  })
+                  .join('');
+              }
+
+              document.getElementById('aiKeywordBtn').addEventListener('click', function() {
+                const keyword = document.getElementById('aiKeywordInput').value.trim();
+                const resultContainer = document.getElementById('aiKeywordResult');
+                const resultContent = document.getElementById('aiKeywordResultContent');
+
+                if (!keyword) {
+                  alert('لطفاً یک کلمه کلیدی وارد کنید.');
+                  return;
+                }
+
+                resultContainer.style.display = 'block';
+                resultContent.innerHTML = `
+                  <div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    در حال تحلیل کلمه کلیدی با هوش مصنوعی...<br>
+                    <small style="font-size: 0.8rem;">این فرآیند ممکن است چند لحظه طول بکشد...</small>
+                  </div>
+                `;
+
+                fetch('/dashboard/keyword/ai-search', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ keyword: keyword }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.error) {
+                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                  } else {
+                    resultContent.innerHTML = `<div class="analysis-result">${formatAiKeywordResult(data.result)}</div>`;
+                  }
+                })
+                .catch(error => {
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                });
+              });
+            });
+          </script>
+
         {% elif active_tab == 'summarizer' %}
           <!-- بخش خلاصه‌ساز -->
           <div class="summarizer-section">
