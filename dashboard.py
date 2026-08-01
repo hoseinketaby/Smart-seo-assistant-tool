@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from youtube_service import search_youtube_videos, summarize_youtube_video_text
 from google_service import search_duckduckgo, search_google_html
 from summarizer_service import summarize_article
+from llm_config import get_active_user_llm_config
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -135,30 +136,10 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
     """
     خلاصه‌سازی متن سفارشی با استفاده از LLM تنظیم شده کاربر
     """
-    from extensions import db
-    from models import Provider, ModelEntry
-    from crypto_utils import decrypt_value
-    
-    active_model = (
-        ModelEntry.query.join(Provider)
-        .filter(Provider.user_id == user.id, ModelEntry.is_active == True)
-        .first()
-    )
+    api_key, base_url, model_id, error_msg = get_active_user_llm_config(user.id)
 
-    if not active_model:
-        active_model = (
-            ModelEntry.query.join(Provider)
-            .filter(Provider.user_id == user.id)
-            .first()
-        )
-
-    if not active_model or not active_model.provider:
-        return "🔑 هیچ کلید API یا مدلی در بخش «مدیریت API Key» تنظیم نشده است. لطفاً ابتدا از منوی سمت راست وارد «مدیریت API Key» شوید و کلید و مدل خود را ثبت کنید."
-
-    provider = active_model.provider
-    api_key = decrypt_value(provider.api_key_encrypted)
-    base_url = provider.base_url
-    model_id = active_model.model_id
+    if error_msg:
+        return error_msg
 
     max_chars = 12000
     truncated_text = text[:max_chars]
@@ -227,30 +208,10 @@ def analyze_content_text(text: str, prompt: str, user) -> str:
     """
     تحلیل محتوا با استفاده از LLM تنظیم‌شده کاربر
     """
-    from extensions import db
-    from models import Provider, ModelEntry
-    from crypto_utils import decrypt_value
+    api_key, base_url, model_id, error_msg = get_active_user_llm_config(user.id)
 
-    active_model = (
-        ModelEntry.query.join(Provider)
-        .filter(Provider.user_id == user.id, ModelEntry.is_active == True)
-        .first()
-    )
-
-    if not active_model:
-        active_model = (
-            ModelEntry.query.join(Provider)
-            .filter(Provider.user_id == user.id)
-            .first()
-        )
-
-    if not active_model or not active_model.provider:
-        return "🔑 هیچ کلید API یا مدلی در بخش «مدیریت API Key» تنظیم نشده است. لطفاً ابتدا از منوی سمت راست وارد «مدیریت API Key» شوید و کلید و مدل خود را ثبت کنید."
-
-    provider = active_model.provider
-    api_key = decrypt_value(provider.api_key_encrypted)
-    base_url = provider.base_url
-    model_id = active_model.model_id
+    if error_msg:
+        return error_msg
 
     max_chars = 12000
     truncated_text = text[:max_chars]
