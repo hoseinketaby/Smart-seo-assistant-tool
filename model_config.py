@@ -8,6 +8,13 @@ from crypto_utils import encrypt_value
 model_config_bp = Blueprint("model_config", __name__, url_prefix="/dashboard/models")
 
 PROVIDER_PRESETS = {
+    "deepseek": {
+        "label": "دیپ‌سیک (DeepSeek)",
+        "base_url": "https://api.deepseek.com",
+        "custom_base_url": False,
+        "supported": True,
+        "model_hint": "شناسه مدل را طبق مستندات DeepSeek وارد کنید، مثلاً deepseek-chat یا deepseek-reasoner",
+    },
     "gapgpt": {
         "label": "گپ‌جی‌پی‌تی (GapGPT)",
         "base_url": "https://api.gapgpt.app/v1",
