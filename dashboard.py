@@ -69,7 +69,7 @@ def overview(tab="content-analyzer"):
         duckduckgo_results = search_duckduckgo(duckduckgo_query, max_results=10)
 
     elif tab == "keyword-research":
-        keyword_results, keyword_error = get_related_keywords(keyword_query, max_results=30)
+        keyword_results, keyword_error = get_related_keywords(current_user.id, keyword_query, max_results=30)
 
     return render_template(
         "dashboard/base.html",
