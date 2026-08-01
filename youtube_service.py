@@ -9,6 +9,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from extensions import db
 from models import Provider, ModelEntry
 from crypto_utils import decrypt_value
+from llm_config import get_active_user_llm_config
 
 
 HEADERS = {
@@ -190,31 +191,6 @@ def get_youtube_transcript(video_id: str) -> str:
                 return " ".join([item["text"] for item in transcript_data])
         except Exception:
             return None
-
-
-def get_active_user_llm_config(user_id: int):
-    active_model = (
-        ModelEntry.query.join(Provider)
-        .filter(Provider.user_id == user_id, ModelEntry.is_active == True)
-        .first()
-    )
-
-    if not active_model:
-        active_model = (
-            ModelEntry.query.join(Provider)
-            .filter(Provider.user_id == user_id)
-            .first()
-        )
-
-    if not active_model or not active_model.provider:
-        return None, None, None, "🔑 هیچ کلید API یا مدلی در بخش «مدیریت API Key» تنظیم نشده است. لطفاً ابتدا از منوی سمت راست وارد «مدیریت API Key» شوید و کلید و مدل خود را ثبت کنید."
-
-    provider = active_model.provider
-    api_key = decrypt_value(provider.api_key_encrypted)
-    base_url = provider.base_url
-    model_id = active_model.model_id
-
-    return api_key, base_url, model_id, None
 
 
 def summarize_youtube_video_text(video_id: str, user) -> str:
