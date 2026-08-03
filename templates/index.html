@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دستیار SEO — تحلیل و بهینه‌سازی محتوا با هوش مصنوعی</title>
+  <meta name="description" content="دستیار هوشمند سئو: تحلیل محتوا، پژوهش کلمات کلیدی، جستجوی یوتیوب و گوگل و خلاصه‌سازی مقالات، همه در یک پنل.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="landing-body">
+
+  <!-- ===================== هدر ===================== -->
+  <header class="site-header">
+    <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="باز کردن منو">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <nav class="main-nav" id="mainNav">
+      <a href="#home">خانه</a>
+      <a href="#features">امکانات</a>
+      <a href="#about">درباره ما</a>
+      <a href="#contact">ارتباط با ما</a>
+    </nav>
+
+    <div class="header-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.overview') }}" class="user-chip" title="ورود به پنل کاربری">
+          <span class="avatar">{{ current_user.email[0]|upper }}</span>
+          <span class="chip-label">{{ current_user.email.split('@')[0] }}</span>
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="logout-mini">خروج</a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}" class="btn-panel">
+          <i class="fas fa-right-to-bracket"></i> ورود به پنل
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ===================== معرفی / Hero ===================== -->
+  <section class="hero" id="home">
+    <span class="hero-badge">✨ همراه شما در مسیر رتبه‌ی اول گوگل</span>
+
+    <h1>
+      سئوی محتوای خود را با <span>هوش مصنوعی</span><br>
+      سریع‌تر، دقیق‌تر و هوشمندانه‌تر انجام دهید
+    </h1>
+
+    <p class="lead">
+      دستیار SEO یک پنل یکپارچه است که تحلیل محتوا، پژوهش کلمات کلیدی، جستجوی ویدیوهای یوتیوب،
+      نتایج گوگل و DuckDuckGo و خلاصه‌سازی مقالات را در یک‌جا در اختیار شما قرار می‌دهد؛
+      تا برای تولید محتوای بهینه، وقت کمتری صرف کنید و نتیجه‌ی بهتری بگیرید.
+    </p>
+
+    <div class="hero-ctas">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.overview') }}" class="btn-hero-primary">
+          <i class="fas fa-gauge-high"></i> استفاده از ابزار SEO
+        </a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}" class="btn-hero-primary">
+          <i class="fas fa-gauge-high"></i> استفاده از ابزار SEO
+        </a>
+        <a href="{{ url_for('auth.signup') }}" class="btn-hero-secondary">
+          <i class="fas fa-user-plus"></i> ساخت حساب رایگان
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">۶+</div>
+        <div class="stat-label">ابزار تخصصی سئو</div>
+      </div>
+      <div>
+        <div class="stat-num">۲۴/۷</div>
+        <div class="stat-label">دسترسی آنلاین</div>
+      </div>
+      <div>
+        <div class="stat-num">۱۰۰٪</div>
+        <div class="stat-label">کنترل با کلید API خودتان</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== امکانات ===================== -->
+  <section class="section" id="features">
+    <div class="section-heading">
+      <span class="eyebrow">امکانات</span>
+      <h2>همه ابزارهای سئوی شما، یک‌جا</h2>
+      <p>از تحلیل محتوا تا جستجوی کلمات کلیدی؛ هر آنچه برای تولید محتوای بهینه لازم دارید.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>تحلیل محتوا</h3>
+        <p>متن یا لینک صفحه‌ی خود را وارد کنید و تحلیل کامل سئوی آن را از نظر خوانایی و ساختار دریافت کنید.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎥</div>
+        <h3>پژوهش یوتیوب</h3>
+        <p>ویدیوهای پربازدید مرتبط با موضوع خود را پیدا کنید و خلاصه‌ای هوشمند از محتوای آن‌ها بگیرید.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>پژوهش گوگل و DuckDuckGo</h3>
+        <p>نتایج برتر جستجو را بررسی و مقالات رقبا را در چند ثانیه خلاصه‌سازی کنید.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>جستجوی کلمات کلیدی</h3>
+        <p>کلمات کلیدی مرتبط و فرصت‌های رتبه‌گیری را با اتصال به سرویس‌های تخصصی کشف کنید.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <h3>کلمات کلیدی با هوش مصنوعی</h3>
+        <p>با کمک هوش مصنوعی، ایده‌های تازه برای کلمات کلیدی و موضوعات محتوایی دریافت کنید.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>خلاصه‌ساز هوشمند</h3>
+        <p>متن‌ها، مقالات و ویدیوهای طولانی را در چند ثانیه به یک خلاصه‌ی کاربردی تبدیل کنید.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== درباره ما ===================== -->
+  <section class="section" id="about">
+    <div class="about-wrap">
+      <div class="about-text">
+        <span class="eyebrow">درباره ما</span>
+        <h2>ما به تیم‌های محتوا کمک می‌کنیم هوشمندانه‌تر کار کنند</h2>
+        <p>
+          دستیار SEO با هدف ساده‌سازی فرآیند تولید محتوای بهینه برای موتورهای جست‌وجو ساخته شده است.
+          به‌جای پراکندگی بین چند ابزار مختلف، ما تحلیل محتوا، پژوهش کلمات کلیدی و بررسی رقبا را
+          در یک پنل واحد و کاربرپسند گرد هم آورده‌ایم.
+        </p>
+        <p>
+          شما با کلید API سرویس‌های هوش مصنوعی و جست‌وجوی مورد نظر خودتان به پنل متصل می‌شوید،
+          یعنی داده‌ها و هزینه‌ی استفاده همیشه در کنترل خودتان باقی می‌ماند.
+        </p>
+
+        <ul class="about-points">
+          <li><i class="fas fa-circle-check"></i> رابط کاربری ساده و سریع، بدون نیاز به دانش فنی</li>
+          <li><i class="fas fa-circle-check"></i> اتصال به ارائه‌دهندگان مختلف هوش مصنوعی و سرویس‌های جست‌وجو</li>
+          <li><i class="fas fa-circle-check"></i> پشتیبانی کامل از زبان فارسی و طراحی راست‌به‌چپ</li>
+        </ul>
+      </div>
+
+      <div class="about-card">
+        <div class="about-stats">
+          <div class="about-stat">
+            <div class="num">۶</div>
+            <div class="label">ابزار در یک پنل</div>
+          </div>
+          <div class="about-stat">
+            <div class="num">۱</div>
+            <div class="label">حساب کاربری برای همه</div>
+          </div>
+          <div class="about-stat">
+            <div class="num">۰</div>
+            <div class="label">نیاز به نصب یا افزونه</div>
+          </div>
+          <div class="about-stat">
+            <div class="num">آزاد</div>
+            <div class="label">انتخاب سرویس هوش مصنوعی</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ارتباط با ما ===================== -->
+  <section class="section" id="contact">
+    <div class="section-heading">
+      <span class="eyebrow">ارتباط با ما</span>
+      <h2>سوالی دارید؟ با ما در تماس باشید</h2>
+      <p>تیم ما آماده‌ی پاسخ‌گویی به سوالات، پیشنهادها و گزارش مشکلات شماست.</p>
+    </div>
+
+    <div class="contact-wrap">
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <div class="icon"><i class="fas fa-envelope"></i></div>
+          <div>
+            <h4>ایمیل پشتیبانی</h4>
+            <a href="mailto:support@seo-assistant.example">support@seo-assistant.example</a>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="icon"><i class="fas fa-comments"></i></div>
+          <div>
+            <h4>پشتیبانی آنلاین</h4>
+            <p>پاسخ‌گویی در روزهای کاری، ۹ صبح تا ۶ عصر</p>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="icon"><i class="fas fa-location-dot"></i></div>
+          <div>
+            <h4>موقعیت</h4>
+            <p>خدمات به‌صورت کاملاً آنلاین ارائه می‌شود</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form-card">
+        <form class="contact-form" id="contactForm">
+          <div class="form-row-2">
+            <div>
+              <label for="contact-name">نام و نام خانوادگی</label>
+              <input type="text" id="contact-name" placeholder="نام شما" required>
+            </div>
+            <div>
+              <label for="contact-email">ایمیل</label>
+              <input type="email" id="contact-email" placeholder="example@domain.com" required>
+            </div>
+          </div>
+
+          <label for="contact-subject">موضوع</label>
+          <input type="text" id="contact-subject" placeholder="موضوع پیام">
+
+          <label for="contact-message">پیام شما</label>
+          <textarea id="contact-message" placeholder="پیام خود را بنویسید..." required></textarea>
+
+          <button type="submit" class="contact-submit">
+            <i class="fas fa-paper-plane"></i> ارسال پیام
+          </button>
+          <div class="contact-form-note" id="contactNote">پیام شما ثبت شد. به‌زودی با شما تماس می‌گیریم.</div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA پایانی ===================== -->
+  <div class="cta-banner">
+    <h2>همین حالا شروع کنید</h2>
+    <p>در چند ثانیه ثبت‌نام کنید و به تمام ابزارهای سئوی هوشمند دسترسی داشته باشید.</p>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard.overview') }}" class="btn-hero-primary">
+        <i class="fas fa-gauge-high"></i> ورود به پنل
+      </a>
+    {% else %}
+      <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}" class="btn-hero-primary">
+        <i class="fas fa-gauge-high"></i> استفاده از ابزار SEO
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- ===================== فوتر ===================== -->
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+        <p>پنل یکپارچه‌ی تحلیل محتوا، پژوهش کلمات کلیدی و خلاصه‌سازی هوشمند برای تیم‌های محتوا و سئوکارها.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>دسترسی سریع</h5>
+          <a href="#home">خانه</a>
+          <a href="#features">امکانات</a>
+          <a href="#about">درباره ما</a>
+          <a href="#contact">ارتباط با ما</a>
+        </div>
+        <div class="footer-col">
+          <h5>حساب کاربری</h5>
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard.overview') }}">پنل کاربری</a>
+            <a href="{{ url_for('auth.logout') }}">خروج</a>
+          {% else %}
+            <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}">ورود</a>
+            <a href="{{ url_for('auth.signup') }}">ثبت‌نام</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © {{ 1404 }} دستیار SEO — تمامی حقوق محفوظ است.
+    </div>
+  </footer>
+
+  <script>
+    // باز و بسته شدن منوی موبایل
+    const navToggle = document.getElementById('navToggle');
+    const mainNav = document.getElementById('mainNav');
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        mainNav.classList.toggle('open');
+      });
+      mainNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => mainNav.classList.remove('open'));
+      });
+    }
+
+    // فرم ارتباط با ما (نمایشی؛ بدون اتصال به سرور)
+    const contactForm = document.getElementById('contactForm');
+    const contactNote = document.getElementById('contactNote');
+    if (contactForm) {
+      contactForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        contactNote.classList.add('visible');
+        contactForm.reset();
+      });
+    }
+  </script>
+</body>
+</html>
