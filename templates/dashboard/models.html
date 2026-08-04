@@ -1,0 +1,240 @@
+{% extends "dashboard/base.html" %}
+
+{% block tab_content %}
+
+<div class="models-section">
+  <h2 class="models-section-title">🔑 کلیدهای دیفالت (پیش‌فرض سایت)</h2>
+  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+    این کلیدها از فایل <code>.env</code> سرور خوانده می‌شوند و برای همه‌ی کاربران در دسترس‌اند؛
+    یعنی حتی بدون ثبت کلید شخصی، ابزار سئو کار می‌کند. اگر خودتان ارائه‌دهنده یا ابزاری اضافه و فعال کنید، همان در اولویت قرار می‌گیرد.
+  </p>
+
+  <div class="default-keys-grid">
+    {% for dk_id, dk in default_keys.items() %}
+      <div class="default-key-card {% if not dk.configured %}not-configured{% endif %}">
+        <div class="default-key-card-head">
+          <strong>{{ dk.display_name }}</strong>
+          {% if dk.configured %}
+            <span class="default-key-badge active">🟢 فعال</span>
+          {% else %}
+            <span class="default-key-badge inactive">⚪ تنظیم‌نشده</span>
+          {% endif %}
+        </div>
+        <p>{{ dk.description }}</p>
+        {% if dk.configured %}
+          <code class="default-key-value">{{ dk.masked_key }}</code>
+        {% else %}
+          <p class="default-key-hint">
+            برای فعال‌سازی، متغیر محیطی <code>{{ dk.env_var }}</code> را در فایل <code>.env</code> سرور تنظیم کنید.
+          </p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="models-section" style="margin-top: 2rem;">
+  <h2 class="models-section-title">افزودن ارائه‌دهنده جدید</h2>
+
+  <form method="POST" action="{{ url_for('model_config.add_provider') }}" class="provider-form" id="providerForm">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="preset_key">ارائه‌دهنده</label>
+        <select name="preset_key" id="preset_key">
+          {% for key, preset in presets.items() %}
+            <option value="{{ key }}">{{ preset.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="name">نام نمایشی</label>
+        <input type="text" name="name" id="name" placeholder="مثلاً: اکانت اصلی GapGPT" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="api_key">API Key</label>
+        <input type="password" name="api_key" id="api_key" placeholder="sk-..." required>
+      </div>
+
+      <div class="form-field" id="baseUrlField" style="display: none;">
+        <label for="base_url">Base URL (سفارشی)</label>
+        <input type="text" name="base_url" id="base_url" placeholder="https://api.example.com/v1">
+      </div>
+    </div>
+
+    <p id="providerHint" class="provider-hint"></p>
+    <div id="providerWarning" class="status error" style="display: none; margin-bottom: 14px;"></div>
+
+    <button type="submit" class="auth-btn" style="margin-top: 8px;" id="submitProviderBtn">افزودن ارائه‌دهنده</button>
+  </form>
+</div>
+
+<div class="models-section" style="margin-top: 2rem;">
+  <h2 class="models-section-title">ارائه‌دهنده‌ها و مدل‌های من</h2>
+
+  {% if not providers %}
+    <div class="tab-placeholder">
+      <p>هنوز هیچ ارائه‌دهنده‌ای اضافه نکرده‌اید.</p>
+    </div>
+  {% endif %}
+
+  {% for provider in providers %}
+    <div class="provider-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div class="provider-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <strong style="font-size: 1.1rem; color: var(--text-main);">{{ provider.name }}</strong>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">({{ presets[provider.preset_key].label if provider.preset_key in presets else provider.preset_key }})</span>
+        </div>
+        <form method="POST" action="{{ url_for('model_config.delete_provider', provider_id=provider.id) }}"
+              onsubmit="return confirm('ارائه‌دهنده و همه مدل‌های آن حذف شوند؟');">
+          <button type="submit" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem;">حذف ارائه‌دهنده</button>
+        </form>
+      </div>
+
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 1rem;">
+        Base URL: <code>{{ provider.base_url if provider.base_url else "پیش‌فرض" }}</code>
+      </p>
+
+      <!-- لیست مدل‌های این ارائه‌دهنده -->
+      <div class="model-list" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.25rem;">
+        {% for model in provider.models %}
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-dark); padding:0.75rem 1rem; border-radius:8px; border:1px solid var(--border-color);">
+            <div>
+              <span style="font-weight:600;">{{ model.display_name }}</span>
+              <code style="color:var(--accent); font-size:0.85rem; margin-right:0.5rem;">({{ model.model_id }})</code>
+              {% if model.is_active %}
+                <span style="background:rgba(16, 185, 129, 0.2); color:#6ee7b7; border:1px solid #064e3b; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-right:8px;">🟢 مدل فعال خلاصه‌ساز</span>
+              {% endif %}
+            </div>
+
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              {% if not model.is_active %}
+                <form method="POST" action="{{ url_for('model_config.activate_model', model_id=model.id) }}">
+                  <button type="submit" class="auth-btn" style="font-size:0.8rem; padding:0.3rem 0.6rem; background-color:var(--bg-sidebar); border:1px solid var(--border-color);">
+                    تنظیم به‌عنوان مدل فعال
+                  </button>
+                </form>
+              {% endif %}
+
+              <form method="POST" action="{{ url_for('model_config.delete_model', model_id=model.id) }}"
+                    onsubmit="return confirm('این مدل حذف شود؟');">
+                <button type="submit" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem;">حذف</button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <p style="font-size:0.85rem; color:var(--text-muted);">هنوز مدلی برای این ارائه‌دهنده اضافه نشده است.</p>
+        {% endfor %}
+      </div>
+
+      <!-- فرم افزودن مدل -->
+      <form method="POST" action="{{ url_for('model_config.add_model', provider_id=provider.id) }}" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <input type="text" name="model_id" placeholder="شناسه مدل (مثلاً gpt-4o-mini)" required style="flex:1; padding:0.5rem; border-radius:6px; background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main);">
+        <input type="text" name="display_name" placeholder="نام نمایشی (اختیاری)" style="flex:1; padding:0.5rem; border-radius:6px; background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main);">
+        <button type="submit" class="auth-btn" style="font-size:0.85rem; padding:0.5rem 1rem;">افزودن مدل</button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="models-section" style="margin-top: 2rem;">
+  <h2 class="models-section-title">افزودن ابزار جستجوی کلمات کلیدی</h2>
+  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+    برای استفاده از تب «جستجوی کلمات کلیدی» باید کلید API یکی از ابزارهای زیر را ثبت کنید.
+    هر دو ابزار امکان دریافت کلید API رایگان دارند.
+  </p>
+
+  <form method="POST" action="{{ url_for('model_config.add_keyword_provider') }}" class="provider-form">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="kw_preset_key">ابزار جستجوی کلمات کلیدی</label>
+        <select name="kw_preset_key" id="kw_preset_key" onchange="updateKeywordProviderHint()">
+          {% for key, preset in keyword_presets.items() %}
+            <option value="{{ key }}">{{ preset.label }}{% if preset.free %} (کلید رایگان){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="kw_api_key">API Key</label>
+        <input type="password" name="kw_api_key" id="kw_api_key" placeholder="کلید API خود را وارد کنید" required>
+      </div>
+    </div>
+
+    <p id="keywordProviderHint" class="provider-hint"></p>
+
+    <div style="margin-bottom: 14px;">
+      {% for key, preset in keyword_presets.items() %}
+        <div class="kw-preset-links" data-preset-key="{{ key }}" style="display: none; font-size: 0.8rem; color: var(--text-muted);">
+          <a href="{{ preset.signup_url }}" target="_blank">دریافت کلید API</a>
+          &nbsp;·&nbsp;
+          <a href="{{ preset.docs_url }}" target="_blank">مستندات API</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="auth-btn" style="margin-top: 8px;">افزودن ابزار</button>
+  </form>
+
+  <script>
+    window.KEYWORD_PROVIDER_PRESETS = {{ keyword_presets | tojson }};
+
+    function updateKeywordProviderHint() {
+      const select = document.getElementById('kw_preset_key');
+      const hint = document.getElementById('keywordProviderHint');
+      const preset = window.KEYWORD_PROVIDER_PRESETS[select.value];
+
+      hint.textContent = preset ? preset.hint : '';
+
+      document.querySelectorAll('.kw-preset-links').forEach(function (el) {
+        el.style.display = (el.dataset.presetKey === select.value) ? 'block' : 'none';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', updateKeywordProviderHint);
+  </script>
+
+  {% if keyword_providers %}
+    <div style="margin-top: 1.5rem;">
+      <h3 style="font-size: 1rem; color: var(--text-main); margin-bottom: 1rem;">ابزارهای ثبت‌شده من</h3>
+      {% for kw_provider in keyword_providers %}
+        <div class="provider-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong style="color: var(--text-main);">
+              {{ keyword_presets[kw_provider.preset_key].label if kw_provider.preset_key in keyword_presets else kw_provider.preset_key }}
+            </strong>
+            {% if kw_provider.is_active %}
+              <span style="background:rgba(16, 185, 129, 0.2); color:#6ee7b7; border:1px solid #064e3b; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-right:8px;">🟢 ابزار فعال</span>
+            {% endif %}
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            {% if not kw_provider.is_active %}
+              <form method="POST" action="{{ url_for('model_config.activate_keyword_provider', provider_id=kw_provider.id) }}">
+                <button type="submit" class="auth-btn" style="font-size:0.8rem; padding:0.3rem 0.6rem; background-color:var(--bg-sidebar); border:1px solid var(--border-color);">
+                  تنظیم به‌عنوان ابزار فعال
+                </button>
+              </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('model_config.delete_keyword_provider', provider_id=kw_provider.id) }}"
+                  onsubmit="return confirm('این ابزار حذف شود؟');">
+              <button type="submit" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem;">حذف</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="tab-placeholder" style="margin-top: 1rem;">
+      <p>هنوز هیچ ابزار جستجوی کلمات کلیدی اضافه نکرده‌اید.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+  window.PROVIDER_PRESETS = {{ presets | tojson }};
+</script>
+<script src="{{ url_for('static', filename='models.js') }}"></script>
+{% endblock %}
