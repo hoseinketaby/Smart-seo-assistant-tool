@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>خرید پلن ابزار سئو — دستیار SEO</title>
+  <meta name="description" content="پلن‌های اشتراک ابزار دستیار SEO؛ تحلیل محتوا، خلاصه‌ساز، جستجوی کلمات کلیدی و پژوهش رقبا بدون محدودیت. برای خرید پلن با ما تماس بگیرید.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="landing-body">
+
+  <!-- ===================== هدر ===================== -->
+  <header class="site-header">
+    <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="باز کردن منو">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <nav class="main-nav" id="mainNav">
+      <a href="{{ url_for('index') }}">خانه</a>
+      <a href="{{ url_for('index') }}#features">امکانات</a>
+      <a href="{{ url_for('services') }}">خدمات طراحی سایت و سئو</a>
+      <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
+      <a href="{{ url_for('index') }}#contact">ارتباط با ما</a>
+    </nav>
+
+    <div class="header-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.overview') }}" class="user-chip" title="ورود به پنل کاربری">
+          <span class="avatar">{{ current_user.email[0]|upper }}</span>
+          <span class="chip-label">{{ current_user.email.split('@')[0] }}</span>
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="logout-mini">خروج</a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}" class="btn-panel">
+          <i class="fas fa-right-to-bracket"></i> ورود به پنل
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ===================== معرفی ===================== -->
+  <section class="services-hero">
+    <span class="hero-badge">🚀 اشتراک ابزار دستیار SEO</span>
+    <h1>پلن مناسب خودتان را برای استفاده از ابزار سئو انتخاب کنید</h1>
+    <p>
+      همه‌ی حساب‌های جدید به‌صورت خودکار ۷ روز دسترسی رایگان و کامل به ابزار سئو دارند.
+      پس از پایان این بازه، برای ادامه‌ی استفاده از تحلیل محتوا، خلاصه‌ساز، پژوهش کلمات کلیدی و
+      سایر امکانات، کافیست یکی از پلن‌های زیر را تهیه کنید.
+    </p>
+    <a href="tel:09355650995" class="btn-call-hero">
+      <i class="fas fa-phone"></i> تماس بگیرید: ۰۹۳۵۵۶۵۰۹۹۵
+    </a>
+  </section>
+
+  <!-- ===================== پلن‌ها ===================== -->
+  <section class="section" id="tool-pricing">
+    <div class="section-heading">
+      <span class="eyebrow">پلن‌های اشتراک</span>
+      <h2>دسترسی نامحدود به همه‌ی ابزارهای سئو</h2>
+      <p>برای دریافت قیمت دقیق و فعال‌سازی حساب خود پس از پایان دوره‌ی رایگان، با ما تماس بگیرید.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- پلن ماهانه -->
+      <div class="pricing-card">
+        <h3>پلن ماهانه</h3>
+        <p class="plan-desc">مناسب استفاده‌ی آزمایشی و پروژه‌های کوتاه‌مدت</p>
+        <div class="plan-price">تماس بگیرید</div>
+        <ul class="plan-features">
+          <li><i class="fas fa-circle-check"></i> دسترسی کامل به تحلیل محتوا (متن و لینک)</li>
+          <li><i class="fas fa-circle-check"></i> خلاصه‌ساز هوشمند مقالات و ویدیوها</li>
+          <li><i class="fas fa-circle-check"></i> پژوهش یوتیوب، گوگل و DuckDuckGo</li>
+          <li><i class="fas fa-circle-check"></i> جستجوی کلمات کلیدی با هوش مصنوعی</li>
+          <li><i class="fas fa-circle-check"></i> پشتیبانی از طریق تیکت</li>
+        </ul>
+        <a href="tel:09355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> تماس بگیرید
+        </a>
+      </div>
+
+      <!-- پلن سه‌ماهه -->
+      <div class="pricing-card featured">
+        <span class="pricing-badge">پرطرفدارترین</span>
+        <h3>پلن سه‌ماهه</h3>
+        <p class="plan-desc">مناسب تیم‌های محتوا و سئوکارهای فعال</p>
+        <div class="plan-price">تماس بگیرید</div>
+        <ul class="plan-features">
+          <li><i class="fas fa-circle-check"></i> همه‌ی امکانات پلن ماهانه</li>
+          <li><i class="fas fa-circle-check"></i> جستجوی کلمات کلیدی با Mangools/KWFinder</li>
+          <li><i class="fas fa-circle-check"></i> مدیریت چند ارائه‌دهنده و مدل هوش مصنوعی</li>
+          <li><i class="fas fa-circle-check"></i> اولویت در پردازش درخواست‌ها</li>
+          <li><i class="fas fa-circle-check"></i> پشتیبانی اختصاصی</li>
+        </ul>
+        <a href="tel:09355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> تماس بگیرید
+        </a>
+      </div>
+
+      <!-- پلن سالانه -->
+      <div class="pricing-card">
+        <h3>پلن سالانه</h3>
+        <p class="plan-desc">مناسب کسب‌وکارها و آژانس‌های سئو</p>
+        <div class="plan-price">تماس بگیرید</div>
+        <ul class="plan-features">
+          <li><i class="fas fa-circle-check"></i> همه‌ی امکانات پلن سه‌ماهه</li>
+          <li><i class="fas fa-circle-check"></i> صرفه‌جویی در هزینه نسبت به پلن‌های کوتاه‌مدت</li>
+          <li><i class="fas fa-circle-check"></i> مشاوره‌ی دوره‌ای استراتژی سئو</li>
+          <li><i class="fas fa-circle-check"></i> پشتیبانی و به‌روزرسانی‌های اولویت‌دار</li>
+        </ul>
+        <a href="tel:09355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> تماس بگیرید
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== بنر تماس ===================== -->
+  <div class="services-contact-banner">
+    <h2>دوره‌ی رایگان شما تمام شده یا سوالی درباره‌ی پلن‌ها دارید؟</h2>
+    <p>همین حالا تماس بگیرید تا حساب شما فعال شود و بدون وقفه به کار با ابزار سئو ادامه دهید.</p>
+    <a href="tel:09355650995" class="btn-hero-primary">
+      <i class="fas fa-phone"></i> تماس بگیرید <span class="phone-number">09355650995</span>
+    </a>
+  </div>
+
+  <!-- ===================== فوتر ===================== -->
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+        <p>پنل یکپارچه‌ی تحلیل محتوا، پژوهش کلمات کلیدی و خلاصه‌سازی هوشمند برای تیم‌های محتوا و سئوکارها.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>دسترسی سریع</h5>
+          <a href="{{ url_for('index') }}">خانه</a>
+          <a href="{{ url_for('services') }}">خدمات طراحی سایت و سئو</a>
+          <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
+          <a href="{{ url_for('index') }}#contact">ارتباط با ما</a>
+        </div>
+        <div class="footer-col">
+          <h5>حساب کاربری</h5>
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard.overview') }}">پنل کاربری</a>
+            <a href="{{ url_for('auth.logout') }}">خروج</a>
+          {% else %}
+            <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}">ورود</a>
+            <a href="{{ url_for('auth.signup') }}">ثبت‌نام</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © {{ 1404 }} دستیار SEO — تمامی حقوق محفوظ است.
+    </div>
+  </footer>
+
+  <script>
+    // باز و بسته شدن منوی موبایل
+    const navToggle = document.getElementById('navToggle');
+    const mainNav = document.getElementById('mainNav');
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        mainNav.classList.toggle('open');
+      });
+      mainNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => mainNav.classList.remove('open'));
+      });
+    }
+  </script>
+</body>
+</html>
