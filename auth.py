@@ -43,16 +43,22 @@ def signup():
             flash("این ایمیل قبلاً ثبت شده است.", "error")
             return render_template("signup.html", email=email, next=next_page)
 
-        user = User(email=email, password_hash=generate_password_hash(password))
+        user = User(
+            email=email,
+            password_hash=generate_password_hash(password),
+            is_trial_active=False,  # دوره رایگان با ثبت‌نام فعال نمی‌شود
+            trial_started_at=None,
+        )
         db.session.add(user)
         db.session.commit()
 
         login_user(user)
         flash(
-            "🎉 خوش آمدید! از همین حالا به مدت ۷ روز به‌صورت کاملاً رایگان به ابزار سئو دسترسی دارید.",
-            "trial",
+            "🎉 حساب کاربری شما ساخته شد. برای فعال‌سازی دوره ۷ روزه رایگان، "
+            "روی دکمه «استفاده از ۷ روز رایگان» در صفحه پلن‌ها کلیک کنید.",
+            "info"
         )
-        return redirect(next_page or url_for("dashboard.overview"))
+        return redirect(next_page or url_for("plans"))
 
     return render_template("signup.html", email="", next=next_page)
 
