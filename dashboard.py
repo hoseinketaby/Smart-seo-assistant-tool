@@ -81,8 +81,7 @@ def overview(tab="content-analyzer"):
     trial_locked = not trial_active
 
     # اگر دوره‌ی رایگان کاربر تمام شده و اشتراکی هم ندارد، دیگر درخواست‌های
-    # پرهزینه (جستجوی یوتیوب/گوگل/کلمات کلیدی) اجرا نمی‌شود؛ محتوای پنل به‌صورت
-    # مات‌شده نمایش داده می‌شود و کاربر به صفحه‌ی پلن‌ها هدایت می‌شود.
+    # پرهزینه (جستجوی یوتیوب/گوگل/کلمات کلیدی) اجرا نمی‌شود
     if trial_active:
         if tab == "youtube-research":
             yt_videos = search_youtube_videos(yt_query, max_results=10)
@@ -230,91 +229,4 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
             ),
             HumanMessage(content=f"{prompt}\n\nمتن:\n{truncated_text}"),
         ]
-        response = llm.invoke(messages)
-        return response.content
-    except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
-
-
-# ==================== تحلیل محتوا (Content Analyzer) ====================
-
-@dashboard_bp.route("/dashboard/content/analyze", methods=["POST"])
-@login_required
-@trial_required
-def analyze_content():
-    """
-    تحلیل محتوا از نظر SEO — ورودی متن دستی یا لینک وب
-    """
-    data = request.get_json() or {}
-    text = data.get("text", "").strip()
-    prompt = data.get("prompt", "").strip()
-    source_type = data.get("source_type", "text")
-    url = data.get("url", "").strip()
-
-    if source_type == "text" and not text:
-        return jsonify({"error": "متن برای تحلیل ارسال نشده است."}), 400
-
-    if source_type == "url" and not url:
-        return jsonify({"error": "لینک ارسال نشده است."}), 400
-
-    if source_type == "url":
-        from summarizer_service import extract_article_content
-        content = extract_article_content(url)
-        if not content:
-            return jsonify({"error": "امکان استخراج محتوای صفحه وجود نداشت."}), 400
-        text = content
-
-    analysis = analyze_content_text(text, prompt, current_user)
-    return jsonify({"analysis": analysis})
-
-
-def analyze_content_text(text: str, prompt: str, user) -> str:
-    """
-    تحلیل محتوا با استفاده از LLM تنظیم‌شده کاربر
-    """
-    api_key, base_url, model_id, error_msg = get_active_user_llm_config(user.id)
-
-    if error_msg:
-        return error_msg
-
-    max_chars = 12000
-    truncated_text = text[:max_chars]
-
-    try:
-        from langchain_openai import ChatOpenAI
-        from langchain_core.messages import SystemMessage, HumanMessage
-
-        kwargs = {
-            "api_key": api_key,
-            "model": model_id,
-            "temperature": 0.5
-        }
-        if base_url:
-            kwargs["base_url"] = base_url
-
-        llm = ChatOpenAI(**kwargs)
-
-        if not prompt:
-            prompt = (
-                "لطفاً محتوای زیر را از نظر SEO به‌صورت حرفه‌ای تحلیل کنید. "
-                "موارد زیر را بررسی کنید:\n"
-                "• نقاط قوت محتوا\n"
-                "• نقاط ضعف و نواقص\n"
-                "• پیشنهادات بهبود (Actionable)\n"
-                "• ساختار تیترها (Heading Structure)\n"
-                "• کلمات کلیدی و چگالی آن‌ها\n"
-                "• خوانایی و تجربه کاربری\n"
-                "• سئو داخلی (Internal SEO)\n"
-                "نتیجه را به زبان فارسی روان و تیتربندی‌شده ارائه دهید."
-            )
-
-        messages = [
-            SystemMessage(
-                content="شما یک متخصص حرفه‌ای SEO و تحلیلگر محتوا هستید. تحلیل‌های شما باید عمیق، دقیق، کاربردی و به زبان فارسی باشد."
-            ),
-            HumanMessage(content=f"{prompt}\n\nمحتوا:\n{truncated_text}"),
-        ]
-        response = llm.invoke(messages)
-        return response.content
-    except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
+        response = llm.invoke
