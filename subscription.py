@@ -1,20 +1,16 @@
 """
 مدیریت دوره‌ی استفاده‌ی رایگان (Trial) کاربران ابزار سئو.
-
-هر کاربر از لحظه‌ی ثبت‌نام (created_at) به مدت ۷ روز به‌صورت رایگان و
-کامل به ابزار سئو دسترسی دارد. پس از پایان این بازه، در صورتی که کاربر
-اشتراک فعالی نداشته باشد (is_subscribed = True)، دسترسی او به ابزار قفل
-می‌شود و باید یکی از پلن‌های موجود در صفحه‌ی «پلن‌ها» را تهیه کند.
+اکنون از trial.py برای مدیریت فعال‌سازی و وضعیت استفاده می‌کند.
 """
 
-import math
 from datetime import datetime, timezone, timedelta
+from trial import is_trial_valid, get_trial_days_left as get_trial_days_left_from_trial
+
 
 TRIAL_DAYS = 7
 
 
 def _aware(dt):
-    """اطمینان از timezone-aware بودن تاریخ برای مقایسه‌ی درست."""
     if dt is None:
         return datetime.now(timezone.utc)
     if dt.tzinfo is None:
@@ -24,7 +20,9 @@ def _aware(dt):
 
 def trial_end_date(user):
     """تاریخ پایان دوره‌ی رایگان ۷ روزه‌ی کاربر."""
-    return _aware(user.created_at) + timedelta(days=TRIAL_DAYS)
+    if not user.is_trial_active or not user.trial_started_at:
+        return None
+    return _aware(user.trial_started_at) + timedelta(days=TRIAL_DAYS)
 
 
 def is_trial_active(user):
@@ -36,14 +34,11 @@ def is_trial_active(user):
         return False
     if getattr(user, "is_subscribed", False):
         return True
-    return datetime.now(timezone.utc) < trial_end_date(user)
+    return is_trial_valid(user)
 
 
 def trial_days_left(user):
     """تعداد روزهای باقی‌مانده از دوره‌ی رایگان (برای نمایش به کاربر)."""
     if getattr(user, "is_subscribed", False):
         return None
-    remaining_seconds = (trial_end_date(user) - datetime.now(timezone.utc)).total_seconds()
-    if remaining_seconds <= 0:
-        return 0
-    return max(1, math.ceil(remaining_seconds / 86400))
+    return get_trial_days_left_from_trial(user)
