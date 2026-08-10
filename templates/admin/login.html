@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% if setup_mode %}راه‌اندازی مدیریت{% else %}ورود مدیر{% endif %} — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="auth-body admin-auth-body">
+  <div class="auth-card admin-login-card">
+    <div class="admin-login-icon"><i class="fas fa-user-shield"></i></div>
+    <h1 class="auth-title">
+      {% if setup_mode %}ساخت اولین حساب مدیر{% else %}ورود به پنل مدیریت{% endif %}
+    </h1>
+    <p class="admin-login-description">
+      {% if setup_mode %}
+        هنوز مدیر سایت ثبت نشده است. این حساب فقط یک‌بار از همین مسیر ساخته می‌شود.
+      {% else %}
+        با نام کاربری و رمزی که در بخش مدیریت ثبت شده وارد شوید.
+      {% endif %}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="status {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin.index') }}" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+
+      <label for="username">نام کاربری مدیر</label>
+      <input type="text" id="username" name="username" value="{{ username }}" minlength="3" maxlength="80" required autofocus autocomplete="username" placeholder="مثلاً siteadmin">
+
+      <label for="password">رمز عبور</label>
+      <input type="password" id="password" name="password" minlength="8" required autocomplete="{% if setup_mode %}new-password{% else %}current-password{% endif %}" placeholder="حداقل ۸ کاراکتر">
+
+      {% if setup_mode %}
+        <label for="confirm_password">تکرار رمز عبور</label>
+        <input type="password" id="confirm_password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="تکرار رمز عبور">
+
+        {% if setup_key_required %}
+          <label for="setup_key">کلید راه‌اندازی مدیریت</label>
+          <input type="password" id="setup_key" name="setup_key" required autocomplete="off" placeholder="مقدار ADMIN_SETUP_KEY">
+        {% endif %}
+      {% endif %}
+
+      <button type="submit" class="auth-btn">
+        {% if setup_mode %}ساخت حساب و ورود{% else %}ورود به مدیریت{% endif %}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      <a href="{{ url_for('auth.login') }}">ورود کاربران عادی</a>
+      <span class="admin-separator">•</span>
+      <a href="{{ url_for('index') }}">بازگشت به سایت</a>
+    </p>
+  </div>
+</body>
+</html>

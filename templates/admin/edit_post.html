@@ -1,0 +1,55 @@
+{% extends "admin/base.html" %}
+
+{% block title %}ویرایش پست{% endblock %}
+
+{% block content %}
+  <section class="admin-page-heading admin-page-heading-row">
+    <div>
+      <span class="eyebrow">ویرایش محتوا</span>
+      <h1>{{ post.title }}</h1>
+      <p>پس از ذخیره، نسخه جدید پست در صفحه اصلی و صفحه مطلب نمایش داده می‌شود.</p>
+    </div>
+    <a href="{{ url_for('admin.index') }}" class="admin-link-button">
+      <i class="fas fa-arrow-right"></i> بازگشت به مدیریت
+    </a>
+  </section>
+
+  <section class="admin-card admin-edit-card">
+    <form method="POST" action="{{ url_for('admin.edit_post', post_id=post.id) }}" class="admin-form">
+      <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+
+      <label for="post-title">عنوان پست *</label>
+      <input type="text" id="post-title" name="title" value="{{ post.title }}" maxlength="180" required>
+
+      <div class="admin-form-row">
+        <div>
+          <label for="post-category">دسته‌بندی *</label>
+          <select id="post-category" name="category" required>
+            {% for category_key, category_info in categories.items() %}
+              <option value="{{ category_key }}" {% if post.category == category_key %}selected{% endif %}>{{ category_info.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="post-cover">نشانی تصویر شاخص</label>
+          <input type="url" id="post-cover" name="cover_image_url" value="{{ post.cover_image_url or '' }}" placeholder="https://example.com/image.jpg">
+        </div>
+      </div>
+
+      <label for="post-excerpt">خلاصه کوتاه</label>
+      <textarea id="post-excerpt" name="excerpt" rows="3" maxlength="360">{{ post.excerpt }}</textarea>
+
+      <label for="post-content">متن کامل پست *</label>
+      <textarea id="post-content" name="content" rows="16" required>{{ post.content }}</textarea>
+
+      <label class="admin-checkbox">
+        <input type="checkbox" name="is_published" {% if post.is_published %}checked{% endif %}>
+        <span>این پست منتشر باشد</span>
+      </label>
+
+      <button type="submit" class="admin-primary-button">
+        <i class="fas fa-floppy-disk"></i> ذخیره تغییرات
+      </button>
+    </form>
+  </section>
+{% endblock %}

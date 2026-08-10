@@ -1,0 +1,174 @@
+{% extends "admin/base.html" %}
+
+{% block title %}مدیریت محتوا{% endblock %}
+
+{% block content %}
+  <section class="admin-page-heading">
+    <div>
+      <span class="eyebrow">مدیریت محتوا</span>
+      <h1>انتشار مطالب سایت</h1>
+      <p>پست‌های این پنل پس از انتشار، در دسته‌بندی مربوط به خود در صفحه اصلی نمایش داده می‌شوند.</p>
+    </div>
+  </section>
+
+  <section class="admin-stats-grid">
+    <div class="admin-stat-card">
+      <span>کل پست‌ها</span>
+      <strong>{{ posts|length }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>منتشرشده</span>
+      <strong>{{ published_count }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>پیش‌نویس</span>
+      <strong>{{ draft_count }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>مدیران</span>
+      <strong>{{ admins_count }}</strong>
+    </div>
+  </section>
+
+  <div class="admin-content-grid">
+    <section class="admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="admin-card-icon"><i class="fas fa-pen-to-square"></i></span>
+          <h2>پست جدید</h2>
+        </div>
+        <span class="admin-card-hint">فیلدهای ستاره‌دار الزامی‌اند</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('admin.create_post') }}" class="admin-form">
+        <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+
+        <label for="post-title">عنوان پست *</label>
+        <input type="text" id="post-title" name="title" maxlength="180" required placeholder="عنوانی کوتاه و واضح">
+
+        <div class="admin-form-row">
+          <div>
+            <label for="post-category">دسته‌بندی *</label>
+            <select id="post-category" name="category" required>
+              {% for category_key, category_info in categories.items() %}
+                <option value="{{ category_key }}">{{ category_info.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="post-cover">نشانی تصویر شاخص</label>
+            <input type="url" id="post-cover" name="cover_image_url" placeholder="https://example.com/image.jpg">
+          </div>
+        </div>
+
+        <label for="post-excerpt">خلاصه کوتاه</label>
+        <textarea id="post-excerpt" name="excerpt" rows="3" maxlength="360" placeholder="اگر خالی بماند، از متن پست ساخته می‌شود."></textarea>
+
+        <label for="post-content">متن کامل پست *</label>
+        <textarea id="post-content" name="content" rows="12" required placeholder="متن کامل مطلب را بنویسید..."></textarea>
+
+        <label class="admin-checkbox">
+          <input type="checkbox" name="is_published" checked>
+          <span>همین حالا در صفحه اصلی منتشر شود</span>
+        </label>
+
+        <button type="submit" class="admin-primary-button">
+          <i class="fas fa-paper-plane"></i> ذخیره پست
+        </button>
+      </form>
+    </section>
+
+    <aside class="admin-card admin-guide-card">
+      <span class="admin-card-icon"><i class="fas fa-layer-group"></i></span>
+      <h2>بخش‌های آماده صفحه اصلی</h2>
+      <p>هر پست با توجه به دسته‌بندی انتخاب‌شده، خودکار در یکی از این چهار بخش قرار می‌گیرد.</p>
+      <div class="admin-category-list">
+        {% for category_key, category_info in categories.items() %}
+          <div>
+            <i class="fas {{ category_info.icon }}"></i>
+            <span>
+              <strong>{{ category_info.label }}</strong>
+              <small>{{ category_info.description }}</small>
+            </span>
+          </div>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+
+  <section class="admin-card admin-posts-card">
+    <div class="admin-card-heading">
+      <div>
+        <span class="admin-card-icon"><i class="fas fa-newspaper"></i></span>
+        <h2>پست‌های ثبت‌شده</h2>
+      </div>
+    </div>
+
+    {% if posts %}
+      <div class="admin-post-list">
+        {% for post in posts %}
+          <article class="admin-post-row">
+            <div class="admin-post-main">
+              <div class="admin-post-title-row">
+                <h3>{{ post.title }}</h3>
+                <span class="admin-status-badge {% if post.is_published %}published{% else %}draft{% endif %}">
+                  {% if post.is_published %}منتشرشده{% else %}پیش‌نویس{% endif %}
+                </span>
+              </div>
+              <p>{{ post.excerpt }}</p>
+              <div class="admin-post-meta">
+                <span><i class="fas fa-folder"></i> {{ categories.get(post.category, {}).get('label', 'مطالب سایت') }}</span>
+                <span><i class="fas fa-calendar"></i> {{ post.created_at.strftime('%Y/%m/%d') }}</span>
+              </div>
+            </div>
+            <div class="admin-post-actions">
+              <a href="{{ url_for('post_detail', post_id=post.id) }}" class="admin-action-button" target="_blank">
+                <i class="fas fa-eye"></i> مشاهده
+              </a>
+              <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="admin-action-button">
+                <i class="fas fa-pen"></i> ویرایش
+              </a>
+              <form method="POST" action="{{ url_for('admin.toggle_post', post_id=post.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+                <button type="submit" class="admin-action-button">
+                  <i class="fas {% if post.is_published %}fa-eye-slash{% else %}fa-upload{% endif %}"></i>
+                  {% if post.is_published %}عدم انتشار{% else %}انتشار{% endif %}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.delete_post', post_id=post.id) }}" onsubmit="return confirm('این پست حذف شود؟');">
+                <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+                <button type="submit" class="admin-action-button danger">
+                  <i class="fas fa-trash"></i> حذف
+                </button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="admin-empty-state">
+        <i class="fas fa-file-circle-plus"></i>
+        <p>هنوز پستی ثبت نشده است. اولین مطلب را از فرم بالا بسازید.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="admin-card admin-account-card">
+    <div class="admin-card-heading">
+      <div>
+        <span class="admin-card-icon"><i class="fas fa-user-plus"></i></span>
+        <h2>افزودن مدیر جدید</h2>
+      </div>
+    </div>
+    <p>مدیر جدید نیز می‌تواند با همین نام کاربری و رمز، از `/admin` یا صفحه ورود معمولی وارد پنل انتشار شود.</p>
+    <form method="POST" action="{{ url_for('admin.create_admin_account') }}" class="admin-inline-form">
+      <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+      <input type="text" name="username" minlength="3" maxlength="80" required autocomplete="off" placeholder="نام کاربری مدیر">
+      <input type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="رمز عبور">
+      <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="تکرار رمز عبور">
+      <button type="submit" class="admin-secondary-button">
+        <i class="fas fa-user-plus"></i> افزودن مدیر
+      </button>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}پنل مدیریت{% endblock %} — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-body">
+  <header class="admin-topbar">
+    <div>
+      <a href="{{ url_for('admin.index') }}" class="admin-brand">🔎 مدیریت دستیار SEO</a>
+      <span class="admin-user-badge"><i class="fas fa-user-shield"></i> {{ admin.username }}</span>
+    </div>
+    <div class="admin-topbar-actions">
+      <a href="{{ url_for('index') }}" class="admin-link-button">
+        <i class="fas fa-house"></i> مشاهده سایت
+      </a>
+      <form method="POST" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+        <button type="submit" class="admin-link-button danger">
+          <i class="fas fa-right-from-bracket"></i> خروج
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <main class="admin-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="status {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

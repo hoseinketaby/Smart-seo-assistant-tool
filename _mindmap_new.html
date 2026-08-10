@@ -1,0 +1,264 @@
+            <!-- Mind Map -->
+            {% if keyword_results %}
+            <div class="mindmap-section" style="margin-top: 30px;">
+              <div class="search-box-container" style="text-align: center; padding: 20px;">
+                <h4 style="color: var(--text-main); margin-bottom: 15px;">🧠 نقشه ذهنی کلمات کلیدی (Mind Map)</h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                  این نقشه ذهنی (شبیه ابزار Screaming Frog) توسط هوش مصنوعی ساخته می‌شود و مشخص می‌کند کدام کلمه کلیدی «والد» و کدام «فرزند» است.
+                </p>
+                <button id="generateMindMapBtn" class="btn btn-primary" style="padding: 12px 40px; font-size: 1rem;">
+                  <i class="fas fa-diagram-project"></i> ساخت نقشه ذهنی
+                </button>
+                <div id="mindMapLoading" style="display: none; margin-top: 15px;">
+                  <div class="loading-spinner" style="text-align: center; padding: 20px; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> در حال ساخت نقشه ذهنی...<br>
+                    <small style="font-size: 0.8rem;">این فرآیند ممکن است چند لحظه طول بکشد...</small>
+                  </div>
+                </div>
+              </div>
+              <div id="mindMapContainer" style="display: none; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px; overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 10px; flex-wrap: wrap; gap: 10px;">
+                  <div>
+                    <span id="mindMapNodeCount" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+                    <span id="mindMapClusterCount" style="color: var(--text-muted); font-size: 0.85rem; margin-right: 15px;"></span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
+                    <div id="mindMapLegend" style="display:flex; gap:10px; font-size:0.75rem; color:var(--text-muted); flex-wrap: wrap;"></div>
+                    <div>
+                      <button id="mindMapZoomIn" class="btn btn-sm" style="background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px;" title="بزرگ‌نمایی"><i class="fas fa-plus"></i></button>
+                      <button id="mindMapZoomOut" class="btn btn-sm" style="background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px;" title="کوچک‌نمایی"><i class="fas fa-minus"></i></button>
+                      <button id="mindMapReset" class="btn btn-sm" style="background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px;" title="بازنشانی"><i class="fas fa-home"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <div id="mindMapSvgContainer" style="width: 100%; height: 600px; position: relative; direction: ltr; background: var(--bg-sidebar); border-radius: 8px;">
+                  <svg id="mindMapSvg" width="100%" height="100%"></svg>
+                </div>
+                <div id="mindMapError" style="display:none; margin-top:10px;" class="status error"></div>
+              </div>
+            </div>
+
+            <script>
+            (function () {
+              var btn = document.getElementById('generateMindMapBtn');
+              if (!btn) return;
+              var loadingEl = document.getElementById('mindMapLoading');
+              var containerEl = document.getElementById('mindMapContainer');
+              var errorEl = document.getElementById('mindMapError');
+              var nodeCountEl = document.getElementById('mindMapNodeCount');
+              var clusterCountEl = document.getElementById('mindMapClusterCount');
+              var legendEl = document.getElementById('mindMapLegend');
+              var svgEl = document.getElementById('mindMapSvg');
+
+              var TYPE_COLORS = { root: '#f59e0b', parent: '#3b6ef6', child: '#10b981', leaf: '#9ca3af' };
+              var TYPE_LABELS = { root: 'ریشه', parent: 'والد', child: 'فرزند', leaf: 'برگ' };
+
+              function collectKeywords() {
+                var rows = document.querySelectorAll('.keyword-results-table tbody tr');
+                var kws = [];
+                rows.forEach(function (tr) {
+                  var td = tr.querySelector('td:first-child');
+                  if (td) {
+                    var txt = (td.textContent || '').trim();
+                    if (txt) kws.push(txt);
+                  }
+                });
+                return kws;
+              }
+
+              function showError(msg) {
+                loadingEl.style.display = 'none';
+                containerEl.style.display = 'block';
+                errorEl.style.display = 'block';
+                errorEl.textContent = msg;
+                d3.select(svgEl).selectAll('*').remove();
+              }
+
+              var zoomBehavior = null;
+              var gRoot = null;
+
+              function applyZoom(factor) {
+                if (!gRoot || !zoomBehavior) return;
+                var svg = d3.select(svgEl);
+                var t = d3.zoomTransform(svg.node());
+                var k = Math.max(0.2, Math.min(4, t.k * factor));
+                var cx = (svgEl.clientWidth || 900) / 2;
+                var cy = 300;
+                var x = cx - (cx - t.x) * (k / t.k);
+                var y = cy - (cy - t.y) * (k / t.k);
+                svg.transition().duration(250).call(zoomBehavior.transform, d3.zoomIdentity.translate(x, y).scale(k));
+              }
+
+              function resetZoom() {
+                if (!gRoot || !zoomBehavior) return;
+                d3.select(svgEl).transition().duration(400).call(zoomBehavior.transform, d3.zoomIdentity);
+              }
+
+              document.getElementById('mindMapZoomIn').addEventListener('click', function () { applyZoom(1.3); });
+              document.getElementById('mindMapZoomOut').addEventListener('click', function () { applyZoom(1 / 1.3); });
+              document.getElementById('mindMapReset').addEventListener('click', resetZoom);
+
+              function renderMindMap(data) {
+                errorEl.style.display = 'none';
+                d3.select(svgEl).selectAll('*').remove();
+
+                var width = svgEl.clientWidth || 900;
+                var height = 600;
+                var svg = d3.select(svgEl);
+                svg.attr('viewBox', '0 0 ' + width + ' ' + height);
+
+                gRoot = svg.append('g').attr('class', 'mindmap-root');
+                zoomBehavior = d3.zoom().scaleExtent([0.2, 4]).on('zoom', function (event) {
+                  gRoot.attr('transform', event.transform);
+                });
+                svg.call(zoomBehavior);
+
+                var nodes = (data && data.nodes) || [];
+                if (!nodes.length) {
+                  showError('نقشه‌ای برای نمایش وجود ندارد.');
+                  return;
+                }
+
+                var clusters = (data && data.clusters) || [];
+                nodeCountEl.textContent = '🔹 گره: ' + nodes.length;
+                clusterCountEl.textContent = '🟣 خوشه: ' + (clusters.length || (data.meta && data.meta.clusters) || 0);
+
+                legendEl.innerHTML = '';
+                Object.keys(TYPE_COLORS).forEach(function (key) {
+                  var item = document.createElement('span');
+                  item.style.display = 'inline-flex';
+                  item.style.alignItems = 'center';
+                  item.style.gap = '4px';
+                  item.innerHTML = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + TYPE_COLORS[key] + '"></span> ' + TYPE_LABELS[key];
+                  legendEl.appendChild(item);
+                });
+
+                var map = {};
+                nodes.forEach(function (n) { map[n.id] = n; n.children = []; });
+                var roots = [];
+                nodes.forEach(function (n) {
+                  if (n.parent_id && map[n.parent_id]) {
+                    map[n.parent_id].children.push(n);
+                  } else {
+                    roots.push(n);
+                  }
+                });
+
+                var rootData;
+                if (roots.length === 1) {
+                  rootData = roots[0];
+                } else {
+                  var seedInput = document.querySelector('input[name="kwq"]');
+                  rootData = {
+                    keyword: (seedInput && seedInput.value) ? seedInput.value : 'کلمات کلیدی',
+                    type: 'root',
+                    children: roots
+                  };
+                }
+
+                var root = d3.hierarchy(rootData, function (d) { return d.children && d.children.length ? d.children : null; });
+
+                var margin = { top: 30, right: 160, bottom: 30, left: 160 };
+                var treeLayout = d3.tree().size([height - margin.top - margin.bottom, width - margin.left - margin.right]);
+                treeLayout(root);
+
+                gRoot.selectAll('.mindmap-link')
+                  .data(root.links())
+                  .enter()
+                  .append('path')
+                  .attr('class', 'mindmap-link')
+                  .attr('fill', 'none')
+                  .attr('stroke', 'var(--border-color)')
+                  .attr('stroke-width', 1.5)
+                  .attr('d', d3.linkHorizontal()
+                    .x(function (d) { return d.y; })
+                    .y(function (d) { return d.x; }));
+
+                var gNode = gRoot.selectAll('.mindmap-node')
+                  .data(root.descendants())
+                  .enter()
+                  .append('g')
+                  .attr('class', 'mindmap-node')
+                  .attr('transform', function (d) { return 'translate(' + d.y + ',' + d.x + ')'; })
+                  .style('cursor', 'default');
+
+                gNode.append('circle')
+                  .attr('r', function (d) {
+                    if (d.data.type === 'root') return 8;
+                    if (d.data.type === 'parent') return 6;
+                    return 4;
+                  })
+                  .attr('fill', function (d) { return TYPE_COLORS[d.data.type] || TYPE_COLORS.leaf; })
+                  .attr('stroke', 'var(--bg-card)')
+                  .attr('stroke-width', 1.5);
+
+                var textSel = gNode.append('text')
+                  .attr('dy', '0.31em')
+                  .attr('x', function (d) { return d.children ? -10 : 10; })
+                  .attr('text-anchor', function (d) { return d.children ? 'end' : 'start'; })
+                  .style('font-size', function (d) {
+                    if (d.data.type === 'root') return '13px';
+                    if (d.data.type === 'parent') return '12px';
+                    return '11px';
+                  })
+                  .style('font-weight', function (d) {
+                    return (d.data.type === 'root' || d.data.type === 'parent') ? '700' : '400';
+                  })
+                  .style('fill', 'var(--text-main)')
+                  .text(function (d) { return d.data.keyword; });
+
+                textSel.append('title')
+                  .text(function (d) {
+                    var parts = [];
+                    parts.push('کلمه: ' + d.data.keyword);
+                    parts.push('نوع: ' + (TYPE_LABELS[d.data.type] || d.data.type));
+                    if (d.data.cluster) parts.push('خوشه: ' + d.data.cluster);
+                    if (d.data.search_intent) parts.push('نیت: ' + d.data.search_intent);
+                    return parts.join('\n');
+                  });
+
+                var xExtent = d3.extent(root.descendants(), function (d) { return d.x; });
+                var yExtent = d3.extent(root.descendants(), function (d) { return d.y; });
+                var w = (yExtent[1] - yExtent[0]) || 1;
+                var h = (xExtent[1] - xExtent[0]) || 1;
+                var scale = Math.min((width - 40) / (w + 200), (height - 40) / (h + 40), 1.2);
+                if (!isFinite(scale) || scale <= 0) scale = 0.8;
+                var tx = (width - w * scale) / 2 - yExtent[0] * scale;
+                var ty = (height - h * scale) / 2 - xExtent[0] * scale;
+                svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+              }
+
+              btn.addEventListener('click', function () {
+                var keywords = collectKeywords();
+                if (!keywords.length) {
+                  alert('ابتدا یک کلمه کلیدی جستجو کنید تا نتایج بارگذاری شوند.');
+                  return;
+                }
+                loadingEl.style.display = 'block';
+                containerEl.style.display = 'none';
+                errorEl.style.display = 'none';
+
+                fetch('/dashboard/keyword/mindmap', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ keywords: keywords })
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                  loadingEl.style.display = 'none';
+                  if (data.error) {
+                    showError(data.error);
+                  } else if (data.mind_map) {
+                    containerEl.style.display = 'block';
+                    renderMindMap(data.mind_map);
+                  } else {
+                    showError('پاسخ نامعتبر از سرور.');
+                  }
+                })
+                .catch(function (err) {
+                  showError('خطا در ارتباط با سرور: ' + err.message);
+                });
+              });
+            })();
+            </script>
+            {% endif %}

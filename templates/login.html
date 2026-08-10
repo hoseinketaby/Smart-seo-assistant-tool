@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ورود — دستیار SEO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <h1 class="auth-title">🔎 ورود به دستیار SEO</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="status {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+      <label for="identifier">ایمیل یا نام کاربری مدیر</label>
+      <input type="text" id="identifier" name="identifier" value="{{ identifier }}" placeholder="example@domain.com یا admin" required autofocus autocomplete="username">
+
+      <label for="password">رمز عبور</label>
+      <input type="password" id="password" name="password" placeholder="••••••••" required>
+
+      <div class="remember-row">
+        <input type="checkbox" id="remember" name="remember" {% if remember %}checked{% endif %}>
+        <label for="remember">مرا به خاطر بسپار</label>
+      </div>
+
+      <button type="submit" class="auth-btn">ورود</button>
+    </form>
+
+    <p class="auth-switch">
+      حساب کاربری ندارید؟ <a href="{{ url_for('auth.signup', next=next) }}">ثبت‌نام کنید</a>
+    </p>
+    <p class="auth-switch">
+      <a href="{{ url_for('index') }}">بازگشت به صفحه اصلی</a>
+    </p>
+  </div>
+</body>
+</html>

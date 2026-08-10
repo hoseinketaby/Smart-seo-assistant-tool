@@ -1,0 +1,45 @@
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand footer-section">
+      <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+      <p>پنل یکپارچه‌ی تحلیل محتوا، پژوهش کلمات کلیدی و خلاصه‌سازی هوشمند برای تیم‌های محتوا و سئوکارها.</p>
+    </div>
+
+    <div class="footer-col footer-section">
+      <h5>دسترسی سریع</h5>
+      <a href="{{ url_for('index') }}">خانه</a>
+      <a href="{{ url_for('index') }}#features">امکانات</a>
+      <a href="{{ url_for('services') }}">خدمات طراحی سایت و سئو</a>
+      <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
+      <a href="{{ url_for('index') }}#contact">ارتباط با ما</a>
+    </div>
+
+    <div class="footer-col footer-section">
+      <h5>مطالب سایت</h5>
+      <a href="{{ url_for('index') }}#posts-news">اخبار سایت</a>
+      <a href="{{ url_for('index') }}#posts-education">آموزش سئو</a>
+      <a href="{{ url_for('index') }}#posts-updates">به‌روزرسانی ابزار</a>
+      <a href="{{ url_for('index') }}#posts-guides">نکات و راهنماها</a>
+    </div>
+
+    <div class="footer-col footer-section">
+      <h5>حساب و مدیریت</h5>
+      {% if current_admin %}
+        <a href="{{ url_for('admin.index') }}">پنل مدیریت</a>
+        <a href="{{ url_for('auth.logout') }}">خروج مدیر</a>
+      {% elif current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.overview') }}">پنل کاربری</a>
+        <a href="{{ url_for('auth.logout') }}">خروج</a>
+      {% else %}
+        <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}">ورود کاربران</a>
+        <a href="{{ url_for('auth.signup') }}">ثبت‌نام</a>
+        <a href="{{ url_for('admin.index') }}">ورود مدیران</a>
+      {% endif %}
+      <a href="mailto:support@seo-assistant.example">ایمیل پشتیبانی</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © ۱۴۰۵ دستیار SEO — تمامی حقوق محفوظ است.
+  </div>
+</footer>
