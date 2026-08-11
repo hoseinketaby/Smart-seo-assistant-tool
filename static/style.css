@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+
 /* ============================================================
    دستیار SEO — Design tokens
    تم: پس‌زمینه‌ی کاملاً مشکی + پیغام‌های آبی نئونی
@@ -25,14 +27,12 @@
   --error-text: #7fe3f7;
   --error-border: rgba(34, 211, 238, 0.45);
 
-  --font-body: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+  --font-body: 'Vazirmatn', Vazir, 'IRANSansX', Tahoma, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
   --radius: 12px;
   --radius-sm: 8px;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
 
 * {
   box-sizing: border-box;

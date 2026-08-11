@@ -14,6 +14,8 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    app.config["JSON_AS_ASCII"] = False
+    app.json.ensure_ascii = False
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me-in-production")
     app.config["ADMIN_SETUP_KEY"] = os.getenv("ADMIN_SETUP_KEY", "")
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
@@ -30,6 +32,12 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
+
+    @app.after_request
+    def set_utf8_response_charset(response):
+        if response.mimetype in {"text/html", "application/json"}:
+            response.charset = "utf-8"
+        return response
 
     @login_manager.user_loader
     def load_user(user_id):
