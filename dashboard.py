@@ -14,13 +14,13 @@ from subscription import is_trial_active, trial_days_left, has_used_trial
 dashboard_bp = Blueprint("dashboard", __name__)
 
 TRIAL_EXPIRED_MESSAGE = (
-    "â³ Ø¯ÙˆØ±Ù‡â€ŒÛŒ Û· Ø±ÙˆØ²Ù‡ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø±Ø§ÛŒÚ¯Ø§Ù† Ø´Ù…Ø§ Ø¨Ù‡ Ù¾Ø§ÛŒØ§Ù† Ø±Ø³ÛŒØ¯Ù‡ Ø§Ø³Øª. "
-    "Ø¨Ø±Ø§ÛŒ Ø§Ø¯Ø§Ù…Ù‡ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ø¨Ø²Ø§Ø± Ø³Ø¦ÙˆØŒ Ù„Ø·ÙØ§Ù‹ ÛŒÚ©ÛŒ Ø§Ø² Ù¾Ù„Ù†â€ŒÙ‡Ø§ Ø±Ø§ Ø§Ø² ØµÙØ­Ù‡â€ŒÛŒ Â«Ù¾Ù„Ù†â€ŒÙ‡Ø§Â» ØªÙ‡ÛŒÙ‡ Ú©Ù†ÛŒØ¯."
+    "⏳ دوره‌ی ۷ روزه استفاده رایگان شما به پایان رسیده است. "
+    "برای ادامه استفاده از ابزار سئو، لطفاً یکی از پلن‌ها را از صفحه‌ی «پلن‌ها» تهیه کنید."
 )
 
 TRIAL_NOT_STARTED_MESSAGE = (
-    "ðŸŽ Ø¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ø¨Ø²Ø§Ø± Ø³Ø¦ÙˆØŒ Ø§Ø¨ØªØ¯Ø§ Ù¾Ù„Ù† Â«Ø¯ÙˆØ±Ù‡â€ŒÛŒ Ø¢Ø²Ù…Ø§ÛŒØ´ÛŒ Û· Ø±ÙˆØ²Ù‡Â» (Û° ØªÙˆÙ…Ø§Ù†) Ø±Ø§ "
-    "Ø§Ø² ØµÙØ­Ù‡â€ŒÛŒ Â«Ù¾Ù„Ù†â€ŒÙ‡Ø§Â» Ø¨Ù‡ Ø³Ø¨Ø¯ Ø®Ø±ÛŒØ¯ Ø§Ø¶Ø§ÙÙ‡ Ú©Ù†ÛŒØ¯ Ùˆ Ø®Ø±ÛŒØ¯ Ø±Ø§ ØªÚ©Ù…ÛŒÙ„ Ú©Ù†ÛŒØ¯."
+    "🎁 برای استفاده از ابزار سئو، ابتدا پلن «دوره‌ی آزمایشی ۷ روزه» (۰ تومان) را "
+    "از صفحه‌ی «پلن‌ها» به سبد خرید اضافه کنید و خرید را تکمیل کنید."
 )
 
 
@@ -35,33 +35,33 @@ def trial_required(f):
     return wrapper
 
 TABS = [
-    {"key": "content-analyzer", "label": "ØªØ­Ù„ÛŒÙ„ Ù…Ø­ØªÙˆØ§", "icon": "ðŸ“Š",
+    {"key": "content-analyzer", "label": "تحلیل محتوا", "icon": "📊",
      "endpoint": "dashboard.overview", "params": {"tab": "content-analyzer"},
-     "placeholder": "Ù…Ø­ØªÙˆØ§ÛŒ Ù…ØªÙ†ÛŒ ÛŒØ§ ØµÙØ­Ø§Øª ÙˆØ¨ Ø±Ø§ Ø§Ø² Ù†Ø¸Ø± SEO ØªØ­Ù„ÛŒÙ„ Ú©Ù†ÛŒØ¯."},
-    {"key": "youtube-research", "label": "Ù¾Ú˜ÙˆÙ‡Ø´ ÛŒÙˆØªÛŒÙˆØ¨", "icon": "ðŸŽ¥",
+     "placeholder": "محتوای متنی یا صفحات وب را از نظر SEO تحلیل کنید."},
+    {"key": "youtube-research", "label": "پژوهش یوتیوب", "icon": "🎥",
      "endpoint": "dashboard.overview", "params": {"tab": "youtube-research"},
      "placeholder": ""},
-    {"key": "google-research", "label": "Ù…Ù‚Ø§Ù„Ø§Øª Ú¯ÙˆÚ¯Ù„", "icon": "ðŸ”",
+    {"key": "google-research", "label": "مقالات گوگل", "icon": "🔍",
      "endpoint": "dashboard.overview", "params": {"tab": "google-research"},
      "placeholder": ""},
-    {"key": "duckduckgo-research", "label": "Ø¬Ø³ØªØ¬Ùˆ Ø¨Ø§ DuckDuckGo", "icon": "ðŸ¦†",
+    {"key": "duckduckgo-research", "label": "جستجو با DuckDuckGo", "icon": "🦆",
      "endpoint": "dashboard.overview", "params": {"tab": "duckduckgo-research"},
      "placeholder": ""},
-    {"key": "keyword-research", "label": "Ø¬Ø³ØªØ¬ÙˆÛŒ Ú©Ù„Ù…Ø§Øª Ú©Ù„ÛŒØ¯ÛŒ", "icon": "ðŸ“ˆ",
+    {"key": "keyword-research", "label": "جستجوی کلمات کلیدی", "icon": "📈",
      "endpoint": "dashboard.overview", "params": {"tab": "keyword-research"},
      "placeholder": ""},
-    {"key": "ai-keyword-research", "label": "Ø¬Ø³ØªØ¬ÙˆÛŒ Ú©Ù„Ù…Ø§Øª Ú©Ù„ÛŒØ¯ÛŒ Ø¨Ø§ Ù‡ÙˆØ´ Ù…ØµÙ†ÙˆØ¹ÛŒ", "icon": "âœ¨",
+    {"key": "ai-keyword-research", "label": "جستجوی کلمات کلیدی با هوش مصنوعی", "icon": "✨",
      "endpoint": "dashboard.overview", "params": {"tab": "ai-keyword-research"},
      "placeholder": ""},
-    {"key": "summarizer", "label": "Ø®Ù„Ø§ØµÙ‡â€ŒØ³Ø§Ø²", "icon": "ðŸ“",
+    {"key": "summarizer", "label": "خلاصه‌ساز", "icon": "📝",
      "endpoint": "dashboard.overview", "params": {"tab": "summarizer"},
      "placeholder": ""},
-    {"key": "api-keys", "label": "Ù…Ø¯ÛŒØ±ÛŒØª API Key", "icon": "ðŸ”‘",
+    {"key": "api-keys", "label": "مدیریت API Key", "icon": "🔑",
      "endpoint": "model_config.index", "params": {},
      "placeholder": ""},
-    {"key": "history", "label": "ØªØ§Ø±ÛŒØ®Ú†Ù‡", "icon": "ðŸ•’",
+    {"key": "history", "label": "تاریخچه", "icon": "🕒",
      "endpoint": "dashboard.overview", "params": {"tab": "history"},
-     "placeholder": "Ø§ÛŒÙ† Ø¨Ø®Ø´ ØªØ­Ù„ÛŒÙ„â€ŒÙ‡Ø§ Ùˆ Ø¬Ø³ØªØ¬ÙˆÙ‡Ø§ÛŒ Ù‚Ø¨Ù„ÛŒ Ø´Ù…Ø§ Ø±Ø§ Ù†Ù…Ø§ÛŒØ´ Ù…ÛŒâ€ŒØ¯Ù‡Ø¯ - Ø¨Ù‡â€ŒØ²ÙˆØ¯ÛŒ."},
+     "placeholder": "این بخش تحلیل‌ها و جستجوهای قبلی شما را نمایش می‌دهد - به‌زودی."},
 ]
 
 TABS_BY_KEY = {t["key"]: t for t in TABS}
