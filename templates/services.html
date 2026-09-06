@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>خدمات طراحی سایت و سئو — دستیار SEO</title>
-  <meta name="description" content="خدمات حرفه‌ای طراحی سایت و بهینه‌سازی سئو با پلن‌های متنوع. برای مشاوره و اطلاع از قیمت با ما تماس بگیرید.">
+  <title>خدمات طراحی سایت، برنامه‌نویسی، SEO و هوش مصنوعی — دستیار SEO</title>
+  <meta name="description" content="خدمات حرفه‌ای طراحی سایت، برنامه‌نویسی، سئو، ساخت چت‌بات هوش مصنوعی و تحلیل داده. مناسب کسب‌وکارهای کوچک تا شرکت‌های بزرگ.">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -21,7 +21,7 @@
     <nav class="main-nav" id="mainNav">
       <a href="{{ url_for('index') }}">خانه</a>
       <a href="{{ url_for('index') }}#features">امکانات</a>
-      <a href="{{ url_for('services') }}">خدمات طراحی سایت و سئو</a>
+      <a href="{{ url_for('services') }}">خدمات ما</a>
       <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
       <a href="{{ url_for('index') }}#about">درباره ما</a>
       <a href="{{ url_for('index') }}#contact">ارتباط با ما</a>
@@ -42,137 +42,259 @@
     </div>
   </header>
 
-  <!-- ===================== معرفی خدمات ===================== -->
+  <!-- ===================== بنر اصلی ===================== -->
   <section class="services-hero">
-    <span class="hero-badge">🌐 طراحی سایت و سئو</span>
-    <h1>خدمات طراحی سایت و سئو، از صفر تا رتبه‌ی اول گوگل</h1>
+    <span class="hero-badge">🌐 راه‌حل‌های دیجیتال برای مسیر رشد شما</span>
+    <h1>پنج خدمت تخصصی برای رشد هر کسب‌وکار</h1>
     <p>
-      طراحی وب‌سایت حرفه‌ای، سریع و واکنش‌گرا همراه با بهینه‌سازی کامل سئو، برای کسب‌وکارهایی
-      که می‌خواهند در نتایج جست‌وجو دیده شوند و مشتری بیشتری جذب کنند.
+      از راه‌اندازی یک وب‌سایت کوچک تا اجرای راهکارهای سازمانی، خدمات ما متناسب با هدف، بودجه و اندازه پروژه شما طراحی می‌شود.
     </p>
-    <a href="tel:09355650995" class="btn-call-hero">
-      <i class="fas fa-phone"></i> تماس بگیرید: ۰۹۳۵۵۶۵۰۹۹۵
-    </a>
-  </section>
-
-  <!-- ===================== شامل خدمات ===================== -->
-  <section class="section">
-    <div class="section-heading">
-      <span class="eyebrow">در تمامی پلن‌ها</span>
-      <h2>چه چیزی دریافت می‌کنید؟</h2>
-      <p>از طراحی و توسعه تا بهینه‌سازی فنی سئو، همه‌چیز برای رشد آنلاین کسب‌وکار شما.</p>
-    </div>
-
-    <div class="included-grid">
-      <div class="included-item">
-        <i class="fas fa-laptop-code"></i>
-        <div>
-          <strong>طراحی سایت اختصاصی</strong>
-          <p>طراحی مدرن، واکنش‌گرا و متناسب با هویت برند شما روی دسکتاپ و موبایل.</p>
-        </div>
-      </div>
-      <div class="included-item">
-        <i class="fas fa-magnifying-glass-chart"></i>
-        <div>
-          <strong>بهینه‌سازی سئو (SEO)</strong>
-          <p>بهینه‌سازی فنی، محتوایی و کلمات کلیدی برای رتبه‌ی بهتر در گوگل.</p>
-        </div>
-      </div>
-      <div class="included-item">
-        <i class="fas fa-gauge-high"></i>
-        <div>
-          <strong>سرعت و عملکرد بالا</strong>
-          <p>بهینه‌سازی سرعت بارگذاری و تجربه‌ی کاربری برای کاهش نرخ پرش.</p>
-        </div>
-      </div>
-      <div class="included-item">
-        <i class="fas fa-headset"></i>
-        <div>
-          <strong>پشتیبانی و مشاوره</strong>
-          <p>همراهی و پشتیبانی پس از تحویل پروژه، همراه با مشاوره‌ی رشد آنلاین.</p>
-        </div>
-      </div>
+    <div class="hero-cta-group">
+      <a href="tel:09355650995" class="btn-call-hero">
+        <i class="fas fa-phone"></i> تماس بگیرید: ۰۹۳۵۵۶۵۰۹۹۵
+      </a>
+      <a href="#services-list" class="btn-hero-secondary">
+        <i class="fas fa-arrow-down"></i> مشاهده خدمات
+      </a>
     </div>
   </section>
 
-  <!-- ===================== پلن‌های قیمتی ===================== -->
-  <section class="section" id="pricing">
+  <!-- ===================== ۵ خدمت اصلی ===================== -->
+  <section class="section services-section" id="services-list">
     <div class="section-heading">
-      <span class="eyebrow">پلن‌ها</span>
-      <h2>پلن مناسب کسب‌وکار خود را انتخاب کنید</h2>
-      <p>برای دریافت قیمت دقیق متناسب با نیاز پروژه‌ی شما، با ما تماس بگیرید.</p>
+      <span class="eyebrow">خدمات ما</span>
+      <h2>هر آنچه برای حضور آنلاین نیاز دارید</h2>
+      <p>از کسب‌وکارهای کوچک و استارتاپ‌ها تا شرکت‌های بزرگ، یک مسیر روشن برای شروع، رشد و مقیاس‌پذیری.</p>
     </div>
 
-    <div class="pricing-grid">
-      <!-- پلن پایه -->
-      <div class="pricing-card">
-        <h3>پلن پایه</h3>
-        <p class="plan-desc">مناسب کسب‌وکارهای کوچک و شروع حضور آنلاین</p>
-        <div class="plan-price">تماس بگیرید</div>
-        <ul class="plan-features">
-          <li><i class="fas fa-circle-check"></i> طراحی سایت شرکتی/معرفی (تک صفحه‌ای یا چند صفحه)</li>
-          <li><i class="fas fa-circle-check"></i> طراحی واکنش‌گرا برای موبایل و دسکتاپ</li>
-          <li><i class="fas fa-circle-check"></i> بهینه‌سازی اولیه‌ی سئو (سئوی فنی پایه)</li>
-          <li><i class="fas fa-circle-check"></i> اتصال به گوگل سرچ کنسول و آنالیتیکس</li>
-          <li><i class="fas fa-circle-check"></i> پشتیبانی یک ماهه</li>
+    <div class="services-grid">
+
+      <!-- خدمت ۱: طراحی سایت -->
+      <article class="service-card">
+        <span class="service-number">۰۱</span>
+        <div class="service-icon-wrap">
+          <i class="fas fa-laptop-code"></i>
+        </div>
+        <h3>طراحی سایت</h3>
+        <p class="service-desc">
+          طراحی وب‌سایت‌های فروشگاهی و شرکتی حرفه‌ای، واکنش‌گرا و سازگار با موبایل. هم با وردپرس و هم با کدنویسی اختصاصی، سایتی می‌سازیم که برند شما را به بهترین شکل نمایش دهد.
+        </p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> سایت فروشگاهی با سیستم پرداخت آنلاین</li>
+          <li><i class="fas fa-check-circle"></i> سایت شرکتی و معرفی خدمات</li>
+          <li><i class="fas fa-check-circle"></i> وردپرس یا کدنویسی خالص</li>
+          <li><i class="fas fa-check-circle"></i> سازگار با موبایل و تبلت</li>
+          <li><i class="fas fa-check-circle"></i> سرعت بالا و طراحی بهینه</li>
         </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
+        <div class="service-tier">
+          <span class="tier-tag">صفر تا حرفه‌ای</span>
+          <span class="tier-tag">کسب‌وکار کوچک</span>
+          <span class="tier-tag">شرکت بزرگ</span>
+        </div>
+      </article>
+
+      <!-- خدمت ۲: برنامه‌نویسی -->
+      <article class="service-card">
+        <span class="service-number">۰۲</span>
+        <div class="service-icon-wrap">
+          <i class="fas fa-code"></i>
+        </div>
+        <h3>برنامه‌نویسی</h3>
+        <p class="service-desc">
+          خدمات برنامه‌نویسی برای هر نوع پروژه و در هر زبان برنامه‌نویسی. از توسعه اپلیکیشن وب و موبایل تا اسکریپت‌نویسی و اتوماسیون — با تکنولوژی‌های روز دنیا.
+        </p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> توسعه وب (فرانت‌اند و بک‌اند)</li>
+          <li><i class="fas fa-check-circle"></i> اپلیکیشن موبایل (Android / iOS)</li>
+          <li><i class="fas fa-check-circle"></i> هر زبان برنامه‌نویسی</li>
+          <li><i class="fas fa-check-circle"></i> اتوماسیون و اسکریپت‌نویسی</li>
+          <li><i class="fas fa-check-circle"></i> API و یکپارچه‌سازی سیستم‌ها</li>
+        </ul>
+        <div class="service-tier">
+          <span class="tier-tag">فریلنسری</span>
+          <span class="tier-tag">استارتاپ</span>
+          <span class="tier-tag">شرکت</span>
+        </div>
+      </article>
+
+      <!-- خدمت ۳: SEO -->
+      <article class="service-card featured" data-aos="fade-up">
+        <span class="service-number">۰۳</span>
+        <div class="service-icon-wrap">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="service-title-row">
+          <h3>SEO و بهینه‌سازی موتورهای جستجو</h3>
+          <span class="service-highlight"><i class="fas fa-sparkles"></i> همراه با پنل هوشمند</span>
+        </div>
+        <p class="service-desc">
+          خدمات جامع سئو از تحقیق کلمات کلیدی و سئوی فنی تا تولید محتوا و لینک‌سازی. ما در این پروژه از <strong>ابزار هوشمند دستیار SEO</strong> خودمان استفاده می‌کنیم که تحلیل‌های لحظه‌ای و پیشنهادات عملی ارائه می‌دهد.
+        </p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> تحقیق و تحلیل کلمات کلیدی</li>
+          <li><i class="fas fa-check-circle"></i> سئوی فنی و آن‌پیج</li>
+          <li><i class="fas fa-check-circle"></i> تولید محتوای سئو شده</li>
+          <li><i class="fas fa-check-circle"></i> لینک‌سازی و سئوی خارج‌از صفحه</li>
+          <li><i class="fas fa-check-circle"></i> استفاده از ابزار هوشمند دستیار SEO</li>
+          <li><i class="fas fa-check-circle"></i> گزارش‌دهی ماهانه و پیگیری رتبه</li>
+        </ul>
+        <div class="service-tier">
+          <span class="tier-tag featured-badge">پیشنهاد ویژه</span>
+          <span class="tier-tag">کسب‌وکار کوچک</span>
+          <span class="tier-tag">شرکت بزرگ</span>
+        </div>
+      </article>
+
+      <!-- خدمت ۴: ساخت چت‌بات -->
+      <article class="service-card">
+        <span class="service-number">۰۴</span>
+        <div class="service-icon-wrap">
+          <i class="fas fa-robot"></i>
+        </div>
+        <h3>ساخت چت‌بات هوش مصنوعی</h3>
+        <p class="service-desc">
+          توسعه چت‌بات‌های هوشمند و مبتنی بر هوش مصنوعی برای پشتیبانی مشتریان، فروش آنلاین و مدیریت سؤالات متداول. چت‌بانی که ۲۴ ساعته برای کسب‌وکارتان کار می‌کند.
+        </p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> چت‌بات واتساپ، تلگرام و اینستاگرام</li>
+          <li><i class="fas fa-check-circle"></i> چت‌بات روی سایت (ویجت)</li>
+          <li><i class="fas fa-check-circle"></i> پردازش زبان طبیعی (NLP)</li>
+          <li><i class="fas fa-check-circle"></i> آموزش اختصاصی با داده‌های شما</li>
+          <li><i class="fas fa-check-circle"></i> اتصال به سیستم CRM</li>
+        </ul>
+        <div class="service-tier">
+          <span class="tier-tag">کسب‌وکار کوچک</span>
+          <span class="tier-tag">فروشگاه</span>
+          <span class="tier-tag">شرکت بزرگ</span>
+        </div>
+      </article>
+
+      <!-- خدمت ۵: هوش مصنوعی و تحلیل داده -->
+      <article class="service-card">
+        <span class="service-number">۰۵</span>
+        <div class="service-icon-wrap">
+          <i class="fas fa-brain"></i>
+        </div>
+        <h3>هوش مصنوعی و تحلیل داده</h3>
+        <p class="service-desc">
+          خدمات هوش مصنوعی و تجزیه‌وتحلیل داده‌ها برای استخراج بینش‌های ارزشمند از داده‌های کسب‌وکارتان. از پیش‌بینی فروش و تحلیل رفتار مشتری تا مدل‌های پیش‌بینی سفارشی.
+        </p>
+        <ul class="service-features">
+          <li><i class="fas fa-check-circle"></i> تجزیه‌وتحلیل داده‌های کسب‌وکار</li>
+          <li><i class="fas fa-check-circle"></i> مدل‌های یادگیری ماشین سفارشی</li>
+          <li><i class="fas fa-check-circle"></i> پیش‌بینی فروش و تقاضا</li>
+          <li><i class="fas fa-check-circle"></i> تحلیل احساسات مشتریان</li>
+          <li><i class="fas fa-check-circle"></i> داشبورد داده و گزارش‌های بصری</li>
+        </ul>
+        <div class="service-tier">
+          <span class="tier-tag">استارتاپ</span>
+          <span class="tier-tag">شرکت متوسط</span>
+          <span class="tier-tag">شرکت بزرگ</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===================== نمایش ابزار دستیار SEO ===================== -->
+  <section class="seo-tool-banner">
+    <div class="seo-tool-content">
+      <div class="seo-tool-text">
+        <span class="eyebrow">ابزار اختصاصی ما</span>
+        <h2>همراه با ابزار هوشمند دستیار SEO</h2>
+        <p>
+          در پروژه‌های SEO، <strong>ابزار هوشمند دستیار SEO</strong> کنار تیم شماست؛ از تحلیل محتوا و کلمات کلیدی تا پیشنهادهای عملی برای بهبود رتبه، همه در یک پنل یکپارچه. همین حالا آن را امتحان کنید:
+        </p>
+        <a href="{{ url_for('index') }}" class="btn-hero-primary">
+          <i class="fas fa-rocket"></i> تست رایگان دستیار SEO
         </a>
       </div>
-
-      <!-- پلن حرفه‌ای -->
-      <div class="pricing-card featured">
-        <span class="pricing-badge">پیشنهاد ویژه</span>
-        <h3>پلن حرفه‌ای</h3>
-        <p class="plan-desc">مناسب کسب‌وکارهایی که می‌خواهند رشد کنند</p>
-        <div class="plan-price">تماس بگیرید</div>
-        <ul class="plan-features">
-          <li><i class="fas fa-circle-check"></i> طراحی سایت چندصفحه‌ای اختصاصی</li>
-          <li><i class="fas fa-circle-check"></i> پژوهش و پیاده‌سازی کلمات کلیدی هدفمند</li>
-          <li><i class="fas fa-circle-check"></i> بهینه‌سازی کامل سئوی فنی و محتوایی</li>
-          <li><i class="fas fa-circle-check"></i> بهینه‌سازی سرعت و تجربه‌ی کاربری</li>
-          <li><i class="fas fa-circle-check"></i> گزارش‌گیری ماهانه از رتبه و ترافیک</li>
-          <li><i class="fas fa-circle-check"></i> پشتیبانی سه ماهه</li>
-        </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
-        </a>
+      <div class="seo-tool-visual">
+        <div class="seo-tool-mockup">
+          <div class="mockup-bar">
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-input"><i class="fas fa-search"></i> <span>کلمه کلیدی خود را وارد کنید...</span></div>
+            <div class="mockup-result">
+              <div class="result-bar" style="width: 85%;"></div>
+              <div class="result-bar" style="width: 65%;"></div>
+              <div class="result-bar" style="width: 92%;"></div>
+            </div>
+            <div class="mockup-stats">
+              <div class="stat-item"><span>۹۲٪</span><small>امتیاز سئو</small></div>
+              <div class="stat-item"><span>۱۲</span><small>کلمه کلیدی</small></div>
+              <div class="stat-item"><span>↑ ۳۵٪</span><small>رشد ترافیک</small></div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  </section>
 
-      <!-- پلن سازمانی -->
-      <div class="pricing-card">
-        <h3>پلن سازمانی</h3>
-        <p class="plan-desc">مناسب کسب‌وکارهای بزرگ و فروشگاه‌های آنلاین</p>
-        <div class="plan-price">تماس بگیرید</div>
-        <ul class="plan-features">
-          <li><i class="fas fa-circle-check"></i> طراحی سایت اختصاصی یا فروشگاهی</li>
-          <li><i class="fas fa-circle-check"></i> استراتژی کامل سئو و تولید محتوا</li>
-          <li><i class="fas fa-circle-check"></i> بهینه‌سازی رقابتی در برابر رقبا</li>
-          <li><i class="fas fa-circle-check"></i> مشاوره‌ی اختصاصی و جلسات دوره‌ای</li>
-          <li><i class="fas fa-circle-check"></i> پشتیبانی و بروزرسانی مستمر</li>
+  <!-- ===================== مقایسه سطوح کسب‌وکار ===================== -->
+  <section class="business-levels section">
+    <div class="section-heading">
+      <span class="eyebrow">مناسب هر اندازه</span>
+      <h2>راه‌حل متناسب با کسب‌وکار شما</h2>
+      <p>خدمات ما طوری طراحی شده که از یک فروشگاه کوچک تا یک شرکت بزرگ، همه بتوانند از آن بهره ببرند.</p>
+    </div>
+    <div class="levels-grid">
+      <div class="level-card">
+        <div class="level-icon"><i class="fas fa-seedling"></i></div>
+        <h3>کسب‌وکارهای کوچک</h3>
+        <p>شروع قدرتمند با وب‌سایت حرفه‌ای، سئوی پایه و چت‌بات هوشمند برای مدیریت مشتریان.</p>
+        <ul class="level-features">
+          <li><i class="fas fa-check"></i> قیمت‌گذاری مقرون‌به‌صرفه</li>
+          <li><i class="fas fa-check"></i> راه‌اندازی سریع (۲ تا ۴ هفته)</li>
+          <li><i class="fas fa-check"></i> پشتیبانی کامل</li>
         </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
-        </a>
+      </div>
+      <div class="level-card featured">
+        <div class="level-icon"><i class="fas fa-rocket"></i></div>
+        <span class="level-badge">محبوب‌ترین</span>
+        <h3>استارتاپ‌ها</h3>
+        <p>رشد سریع با ترکیب سئو، هوش مصنوعی و تحلیل داده برای کسب مزیت رقابتی.</p>
+        <ul class="level-features">
+          <li><i class="fas fa-check"></i> مشاوره اختصاصی</li>
+          <li><i class="fas fa-check"></i> پکیج‌های ترکیبی</li>
+          <li><i class="fas fa-check"></i> گزارش‌دهی هفتگی</li>
+        </ul>
+      </div>
+      <div class="level-card">
+        <div class="level-icon"><i class="fas fa-building"></i></div>
+        <h3>شرکت‌های بزرگ</h3>
+        <p>راه‌حل‌های سازمانی با مقیاس‌پذیری بالا: اتوماسیون، هوش مصنوعی و زیرساخت اختصاصی.</p>
+        <ul class="level-features">
+          <li><i class="fas fa-check"></i> تیم اختصاصی</li>
+          <li><i class="fas fa-check"></i> API و یکپارچه‌سازی</li>
+          <li><i class="fas fa-check"></i> SLA و پشتیبانی ۲۴/۷</li>
+        </ul>
       </div>
     </div>
   </section>
 
   <!-- ===================== بنر تماس ===================== -->
   <div class="services-contact-banner">
-    <h2>برای مشاوره و اطلاع از قیمت با ما تماس بگیرید</h2>
-    <p>کارشناسان ما آماده‌ی پاسخ‌گویی و ارائه‌ی پیشنهاد متناسب با پروژه‌ی شما هستند.</p>
-    <a href="tel:09355650995" class="btn-hero-primary">
-      <i class="fas fa-phone"></i> تماس بگیرید <span class="phone-number">09355650995</span>
-    </a>
+    <h2>برای مشاوره رایگان و ارائه پیشنهاد متناسب با پروژه‌تان با ما تماس بگیرید</h2>
+    <p>کارشناسان ما آماده‌اند بهترین راه‌حل دیجیتال را برای کسب‌وکارتان پیشنهاد دهند.</p>
+    <div class="contact-actions">
+      <a href="tel:09355650995" class="btn-hero-primary">
+        <i class="fas fa-phone"></i> تماس بگیرید <span class="phone-number">۰۹۳۵۵۶۵۰۹۹۵</span>
+      </a>
+      <a href="{{ url_for('index') }}" class="btn-hero-secondary">
+        <i class="fas fa-rocket"></i> تست رایگان دستیار SEO
+      </a>
+    </div>
   </div>
 
   <!-- ===================== فوتر ===================== -->
   {% include "_footer.html" %}
 
   <script>
-    // باز و بسته شدن منوی موبایل
+    // باز و بستن منوی موبایل
     const navToggle = document.getElementById('navToggle');
     const mainNav = document.getElementById('mainNav');
     if (navToggle) {
@@ -183,6 +305,15 @@
         link.addEventListener('click', () => mainNav.classList.remove('open'));
       });
     }
+
+    // اسکرول نرم به بخش خدمات
+    document.querySelectorAll('a[href="#services-list"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById('services-list');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   </script>
 </body>
 </html>
