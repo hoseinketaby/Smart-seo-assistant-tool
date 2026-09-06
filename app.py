@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from extensions import db, login_manager
 from models import SitePost, User
+from services_catalog import SERVICES, get_service
 
 load_dotenv()
 
@@ -79,7 +80,7 @@ def create_app():
 
     @app.context_processor
     def inject_global_template_values():
-        return {"current_admin": get_current_admin()}
+        return {"current_admin": get_current_admin(), "services_catalog": SERVICES}
 
     @app.route("/")
     def index():
@@ -123,6 +124,17 @@ def create_app():
     @app.route("/services")
     def services():
         return render_template("services.html")
+
+    @app.route("/services/<service_key>")
+    def service_detail(service_key):
+        service = get_service(service_key)
+        if service is None:
+            abort(404)
+
+        other_services = [item for item in SERVICES if item["key"] != service_key]
+        return render_template(
+            "service_detail.html", service=service, other_services=other_services
+        )
 
     @app.route("/plans")
     def plans():
