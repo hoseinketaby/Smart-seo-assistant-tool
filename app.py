@@ -5,8 +5,6 @@ from datetime import timedelta
 from flask import Flask, Response, abort, redirect, url_for, render_template, request
 from flask_login import current_user
 from dotenv import load_dotenv
-from sqlalchemy import text
-
 from extensions import db, login_manager
 from models import ErrorLog, SitePost, User
 from services_catalog import SERVICES, get_service
@@ -24,10 +22,14 @@ def create_app():
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
-    # اصلاح فرمت آدرس دیتابیس برای Render (سازگاری با PostgreSQL و SQLite)
-    db_url = os.getenv("DATABASE_URL", "sqlite:///app.db")
+    # Normalize the Render PostgreSQL connection URL.
+    db_url = os.getenv("DATABASE_URL", "").strip()
+    if not db_url:
+        raise RuntimeError("DATABASE_URL is required and must point to PostgreSQL.")
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
+    if not db_url.startswith(("postgresql://", "postgresql+psycopg2://")):
+        raise RuntimeError("DATABASE_URL must be a PostgreSQL connection string.")
         
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -76,8 +78,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # مایگریشن خودکار فقط برای SQLite جهت جلوگیری از خطای 500
-        if "sqlite" in app.config["SQLALCHEMY_DATABASE_URI"]:
+        if False:
             try:
                 db.session.execute(text("ALTER TABLE model_entries ADD COLUMN is_active BOOLEAN DEFAULT 0;"))
                 db.session.commit()
