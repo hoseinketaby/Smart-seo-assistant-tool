@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+
+{% block title %}تنظیمات سئو{% endblock %}
+
+{% block content %}
+  <section class="admin-page-heading admin-page-heading-row">
+    <div>
+      <span class="eyebrow">تنظیمات کلی</span>
+      <h1>تنظیمات کلی سئو سایت</h1>
+      <p>این تنظیمات روی همه صفحات سایت (صفحه اصلی، نقشه سایت، robots.txt و پست‌ها) اعمال می‌شود.</p>
+    </div>
+    <a href="{{ url_for('admin.seo_dashboard') }}" class="admin-link-button">
+      <i class="fas fa-arrow-right"></i> بازگشت به سئو سایت
+    </a>
+  </section>
+
+  <form method="POST" action="{{ url_for('admin.seo_settings_view') }}">
+    <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+
+    <div class="admin-content-grid">
+      <section class="admin-card">
+        <div class="admin-card-heading">
+          <div>
+            <span class="admin-card-icon"><i class="fas fa-globe"></i></span>
+            <h2>عنوان و توضیحات پیش‌فرض</h2>
+          </div>
+        </div>
+
+        <div class="admin-form">
+          <div class="admin-form-row">
+            <div>
+              <label for="site_name">نام سایت</label>
+              <input type="text" id="site_name" name="site_name" value="{{ settings.site_name or '' }}" placeholder="دستیار SEO">
+            </div>
+            <div>
+              <label for="title_separator">جداکننده عنوان</label>
+              <input type="text" id="title_separator" name="title_separator" maxlength="10" value="{{ settings.title_separator or '—' }}">
+            </div>
+          </div>
+
+          <label for="default_meta_title">عنوان پیش‌فرض سئو (صفحه اصلی)</label>
+          <input type="text" id="default_meta_title" name="default_meta_title" maxlength="70" value="{{ settings.default_meta_title or '' }}" placeholder="دستیار SEO — تحلیل و بهینه‌سازی محتوا با هوش مصنوعی">
+
+          <label for="default_meta_description">توضیحات پیش‌فرض متا (صفحه اصلی و پست‌های بدون توضیح)</label>
+          <textarea id="default_meta_description" name="default_meta_description" rows="3" maxlength="320" class="seo-textarea-sm" placeholder="توضیح کوتاهی درباره سایت شما...">{{ settings.default_meta_description or '' }}</textarea>
+
+          <label for="default_og_image_url">تصویر پیش‌فرض شبکه‌های اجتماعی (OG Image)</label>
+          <input type="url" id="default_og_image_url" name="default_og_image_url" value="{{ settings.default_og_image_url or '' }}" placeholder="https://example.com/cover.jpg">
+
+          <label class="admin-checkbox">
+            <input type="checkbox" name="sitemap_include_posts" {% if settings.sitemap_include_posts %}checked{% endif %}>
+            <span>پست‌های منتشرشده در نقشه سایت (sitemap.xml) قرار بگیرند</span>
+          </label>
+        </div>
+      </section>
+
+      <aside class="admin-card admin-guide-card">
+        <span class="admin-card-icon"><i class="fas fa-lightbulb"></i></span>
+        <h2>راهنمای سریع</h2>
+        <p>برای هر پست، از دکمه «بهینه‌سازی» در تب سئو سایت استفاده کنید تا کلمه کلیدی، عنوان سئو و توضیحات متا را جداگانه تنظیم کنید.</p>
+        <p>کدهای تأیید مالکیت گوگل و بینگ را دقیقاً همان‌طور که در پنل آن سرویس‌ها داده شده وارد کنید (بدون تگ HTML).</p>
+      </aside>
+    </div>
+
+    <section class="admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="admin-card-icon"><i class="fas fa-tags"></i></span>
+          <h2>اطلاعات ساختاریافته (Schema) و شبکه‌های اجتماعی</h2>
+        </div>
+      </div>
+
+      <div class="admin-form">
+        <div class="admin-form-row">
+          <div>
+            <label for="schema_type">نوع کسب‌وکار</label>
+            <select id="schema_type" name="schema_type">
+              <option value="Organization" {% if settings.schema_type == 'Organization' %}selected{% endif %}>سازمان / شرکت</option>
+              <option value="Person" {% if settings.schema_type == 'Person' %}selected{% endif %}>شخص</option>
+              <option value="LocalBusiness" {% if settings.schema_type == 'LocalBusiness' %}selected{% endif %}>کسب‌وکار محلی</option>
+            </select>
+          </div>
+          <div>
+            <label for="organization_name">نام سازمان / برند</label>
+            <input type="text" id="organization_name" name="organization_name" value="{{ settings.organization_name or '' }}" placeholder="نام برند شما">
+          </div>
+        </div>
+
+        <label for="social_profile_urls">لینک شبکه‌های اجتماعی (هر خط یک لینک)</label>
+        <textarea id="social_profile_urls" name="social_profile_urls" rows="3" class="seo-textarea-sm" placeholder="https://instagram.com/yourpage&#10;https://t.me/yourchannel">{{ settings.social_profile_urls or '' }}</textarea>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="admin-card-icon"><i class="fas fa-shield-halved"></i></span>
+          <h2>تأیید مالکیت، آنالیتیکس و robots.txt</h2>
+        </div>
+      </div>
+
+      <div class="admin-form">
+        <div class="admin-form-row">
+          <div>
+            <label for="google_site_verification">کد تأیید Google Search Console</label>
+            <input type="text" id="google_site_verification" name="google_site_verification" value="{{ settings.google_site_verification or '' }}" placeholder="فقط مقدار content متا تگ">
+          </div>
+          <div>
+            <label for="bing_site_verification">کد تأیید Bing Webmaster</label>
+            <input type="text" id="bing_site_verification" name="bing_site_verification" value="{{ settings.bing_site_verification or '' }}" placeholder="فقط مقدار content متا تگ">
+          </div>
+        </div>
+
+        <label for="google_analytics_id">شناسه Google Analytics (GA4)</label>
+        <input type="text" id="google_analytics_id" name="google_analytics_id" value="{{ settings.google_analytics_id or '' }}" placeholder="G-XXXXXXXXXX">
+
+        <label for="robots_extra_rules">قوانین اضافه برای robots.txt (اختیاری، هر خط یک قانون)</label>
+        <textarea id="robots_extra_rules" name="robots_extra_rules" rows="3" class="seo-textarea-sm" placeholder="Disallow: /private">{{ settings.robots_extra_rules or '' }}</textarea>
+      </div>
+
+      <button type="submit" class="admin-primary-button">
+        <i class="fas fa-floppy-disk"></i> ذخیره همه تنظیمات سئو
+      </button>
+    </section>
+  </form>
+{% endblock %}

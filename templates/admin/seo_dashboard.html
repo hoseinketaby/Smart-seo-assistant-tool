@@ -1,0 +1,143 @@
+{% extends "admin/base.html" %}
+
+{% block title %}سئو سایت{% endblock %}
+
+{% block content %}
+  <section class="admin-page-heading admin-page-heading-row">
+    <div>
+      <span class="eyebrow">بهینه‌سازی موتور جستجو</span>
+      <h1>وضعیت سئوی سایت</h1>
+      <p>امتیاز هر پست بر اساس عنوان، توضیحات متا، کلمه کلیدی هدف و طول محتوا محاسبه می‌شود.</p>
+    </div>
+    <a href="{{ url_for('admin.seo_settings_view') }}" class="admin-link-button">
+      <i class="fas fa-gears"></i> تنظیمات کلی سئو
+    </a>
+  </section>
+
+  <section class="seo-overview-grid">
+    <div class="admin-stat-card">
+      <span>میانگین امتیاز سئو</span>
+      <strong>{{ overview.avg_score }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>پست‌های خوب</span>
+      <strong style="color:#4ade80">{{ overview.good }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>پست‌های قابل بهبود</span>
+      <strong style="color:#facc15">{{ overview.ok }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>پست‌های ضعیف</span>
+      <strong style="color:#f87171">{{ overview.bad }}</strong>
+    </div>
+    <div class="admin-stat-card">
+      <span>بدون کلمه کلیدی</span>
+      <strong>{{ overview.missing_keyword }}</strong>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <div class="admin-card-heading">
+      <div>
+        <span class="admin-card-icon"><i class="fas fa-list-check"></i></span>
+        <h2>وضعیت سئوی هر پست</h2>
+      </div>
+      <span class="admin-card-hint">برای ویرایش سئوی هر پست، روی آن کلیک کنید</span>
+    </div>
+
+    {% if overview.analyzed %}
+      <div style="overflow-x:auto;">
+        <table class="seo-posts-table">
+          <thead>
+            <tr>
+              <th>امتیاز</th>
+              <th>پست</th>
+              <th>کلمه کلیدی هدف</th>
+              <th>دسته‌بندی</th>
+              <th>وضعیت انتشار</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for post, result in overview.analyzed %}
+              <tr>
+                <td>
+                  <div class="seo-score-ring small status-{{ result.status }}" style="--score: {{ result.score }};">
+                    <span>{{ result.score }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="seo-posts-row-title">
+                    <div>
+                      <strong>{{ post.title }}</strong>
+                      <small>{{ (post.seo_title or post.title)|truncate(60) }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if post.focus_keyword %}
+                    <span class="seo-keyword-chip"><i class="fas fa-key"></i> {{ post.focus_keyword }}</span>
+                  {% else %}
+                    <span class="seo-keyword-chip missing"><i class="fas fa-triangle-exclamation"></i> تعیین نشده</span>
+                  {% endif %}
+                </td>
+                <td>{{ categories.get(post.category, {}).get('label', 'مطالب سایت') }}</td>
+                <td>
+                  <span class="admin-status-badge {% if post.is_published %}published{% else %}draft{% endif %}">
+                    {% if post.is_published %}منتشرشده{% else %}پیش‌نویس{% endif %}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="admin-action-button">
+                    <i class="fas fa-magnifying-glass-chart"></i> بهینه‌سازی
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="admin-empty-state">
+        <i class="fas fa-file-circle-plus"></i>
+        <p>هنوز پستی برای تحلیل سئو وجود ندارد.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="admin-card">
+    <div class="admin-card-heading">
+      <div>
+        <span class="admin-card-icon"><i class="fas fa-toolbox"></i></span>
+        <h2>ابزارهای فنی سئو</h2>
+      </div>
+    </div>
+
+    <div class="seo-tools-grid">
+      <div class="seo-tool-card">
+        <h3><i class="fas fa-sitemap"></i> نقشه سایت (Sitemap)</h3>
+        <p>نقشه سایت به‌صورت خودکار از روی پست‌های منتشرشده ساخته می‌شود و می‌توانید آن را در گوگل سرچ کنسول ثبت کنید.</p>
+        <code>{{ url_for('sitemap_xml', _external=True) }}</code>
+        <a href="{{ url_for('sitemap_xml') }}" target="_blank" class="admin-action-button">
+          <i class="fas fa-eye"></i> مشاهده نقشه سایت
+        </a>
+      </div>
+      <div class="seo-tool-card">
+        <h3><i class="fas fa-robot"></i> فایل robots.txt</h3>
+        <p>مسیرهای مدیریتی به‌صورت پیش‌فرض از خزش گوگل مستثنا شده‌اند. قوانین دلخواه را از تنظیمات کلی اضافه کنید.</p>
+        <code>{{ url_for('robots_txt', _external=True) }}</code>
+        <a href="{{ url_for('robots_txt') }}" target="_blank" class="admin-action-button">
+          <i class="fas fa-eye"></i> مشاهده robots.txt
+        </a>
+      </div>
+      <div class="seo-tool-card">
+        <h3><i class="fas fa-signature"></i> کدهای تأیید مالکیت</h3>
+        <p>کد تأیید گوگل سرچ کنسول، بینگ وبمستر و شناسه گوگل آنالیتیکس از بخش تنظیمات کلی قابل ثبت است.</p>
+        <a href="{{ url_for('admin.seo_settings_view') }}" class="admin-action-button">
+          <i class="fas fa-gears"></i> رفتن به تنظیمات
+        </a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

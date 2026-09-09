@@ -3152,3 +3152,367 @@ a {
     top: 64px;
   }
 }
+
+/* ============================================================
+   تب سئو سایت (SEO Tab) — پنل مدیریت
+   ============================================================ */
+
+.admin-tabs {
+  position: sticky;
+  top: 72px;
+  z-index: 25;
+  display: flex;
+  gap: 6px;
+  padding: 10px 5% 0;
+  background: rgba(10, 11, 16, 0.94);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(14px);
+  overflow-x: auto;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-tab:hover {
+  color: var(--text-main);
+}
+
+.admin-tab.active {
+  color: var(--neon-blue);
+  border-bottom-color: var(--neon-blue);
+}
+
+/* ---- کارت‌های امتیاز کلی سئو ---- */
+
+.seo-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.seo-score-ring {
+  --ring-color: var(--neon-blue);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text-main);
+  background: conic-gradient(var(--ring-color) calc(var(--score, 0) * 1%), rgba(255, 255, 255, 0.06) 0);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.seo-score-ring::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: var(--bg-card);
+}
+
+.seo-score-ring span {
+  position: relative;
+  z-index: 1;
+}
+
+.seo-score-ring.status-good { --ring-color: #4ade80; }
+.seo-score-ring.status-ok { --ring-color: #facc15; }
+.seo-score-ring.status-bad { --ring-color: #f87171; }
+
+.seo-score-ring.small {
+  width: 42px;
+  height: 42px;
+  font-size: 0.78rem;
+}
+
+/* ---- جدول پست‌ها با وضعیت سئو ---- */
+
+.seo-posts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.seo-posts-table th,
+.seo-posts-table td {
+  padding: 14px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.86rem;
+  vertical-align: middle;
+}
+
+.seo-posts-table th {
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.seo-posts-row-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seo-posts-row-title strong {
+  color: var(--text-main);
+  display: block;
+}
+
+.seo-posts-row-title small {
+  color: var(--text-muted);
+}
+
+.seo-keyword-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(59, 110, 246, 0.12);
+  color: #b9cbff;
+  border: 1px solid rgba(59, 110, 246, 0.3);
+  font-size: 0.76rem;
+}
+
+.seo-keyword-chip.missing {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+/* ---- جعبه سئوی داخل صفحه ویرایش پست (شبیه متاباکس رنک‌مث) ---- */
+
+.seo-metabox {
+  margin-top: 22px;
+}
+
+.seo-metabox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.seo-metabox-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seo-metabox-score-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seo-metabox-score-label strong {
+  color: var(--text-main);
+  font-size: 0.92rem;
+}
+
+.seo-metabox-score-label span {
+  color: var(--text-dim);
+  font-size: 0.76rem;
+}
+
+.seo-field-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.seo-field-hint .seo-counter.warn {
+  color: #facc15;
+}
+
+.seo-field-hint .seo-counter.bad {
+  color: #f87171;
+}
+
+.seo-field-hint .seo-counter.good {
+  color: #4ade80;
+}
+
+.seo-snippet-preview {
+  margin: 14px 0 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sidebar);
+  font-family: arial, sans-serif;
+  direction: ltr;
+  text-align: left;
+}
+
+.seo-snippet-preview .snippet-url {
+  color: #4ade80;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.seo-snippet-preview .snippet-title {
+  color: #8ab4f8;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.seo-snippet-preview .snippet-description {
+  color: #bdc1c6;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.seo-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seo-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-sidebar);
+  font-size: 0.84rem;
+  line-height: 1.7;
+}
+
+.seo-checklist li.passed {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.seo-checklist li.failed {
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.seo-checklist li i {
+  margin-top: 3px;
+}
+
+.seo-checklist li.passed i {
+  color: #4ade80;
+}
+
+.seo-checklist li.failed i {
+  color: #f87171;
+}
+
+.seo-checklist li strong {
+  display: block;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.seo-checklist li span {
+  color: var(--text-muted);
+}
+
+.seo-robots-row {
+  display: flex;
+  gap: 24px;
+  margin: 14px 0 6px;
+  flex-wrap: wrap;
+}
+
+.seo-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.seo-tool-card {
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sidebar);
+}
+
+.seo-tool-card h3 {
+  margin: 0 0 8px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seo-tool-card p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+
+.seo-tool-card code {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--neon-blue);
+  font-size: 0.78rem;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+  direction: ltr;
+  text-align: left;
+}
+
+.admin-form textarea.seo-textarea-sm {
+  min-height: 90px;
+}
+
+@media (max-width: 1100px) {
+  .seo-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .seo-tools-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-tabs {
+    top: 0;
+  }
+
+  .seo-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seo-posts-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

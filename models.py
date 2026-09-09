@@ -59,7 +59,49 @@ class SitePost(db.Model):
         nullable=False,
     )
 
+    # ---- فیلدهای سئو (مشابه افزونه رنک‌مث در وردپرس) ----
+    focus_keyword = db.Column(db.String(160), nullable=True)
+    seo_title = db.Column(db.String(70), nullable=True)
+    meta_description = db.Column(db.String(320), nullable=True)
+    canonical_url = db.Column(db.String(1024), nullable=True)
+    og_image_url = db.Column(db.String(1024), nullable=True)
+    meta_robots_noindex = db.Column(db.Boolean, nullable=False, default=False)
+    meta_robots_nofollow = db.Column(db.Boolean, nullable=False, default=False)
+    seo_score = db.Column(db.Integer, nullable=False, default=0)
+
     author = db.relationship("AdminAccount", back_populates="posts")
+
+
+class SeoSetting(db.Model):
+    """تنظیمات کلی سئو سایت که روی همه صفحات اعمال می‌شود (شبیه تنظیمات عمومی رنک‌مث)."""
+
+    __tablename__ = "seo_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    site_name = db.Column(db.String(160), nullable=True)
+    title_separator = db.Column(db.String(10), nullable=False, default="—")
+    default_meta_title = db.Column(db.String(70), nullable=True)
+    default_meta_description = db.Column(db.String(320), nullable=True)
+    default_og_image_url = db.Column(db.String(1024), nullable=True)
+
+    google_site_verification = db.Column(db.String(255), nullable=True)
+    bing_site_verification = db.Column(db.String(255), nullable=True)
+    google_analytics_id = db.Column(db.String(64), nullable=True)
+
+    schema_type = db.Column(db.String(30), nullable=False, default="Organization")
+    organization_name = db.Column(db.String(160), nullable=True)
+    social_profile_urls = db.Column(db.Text, nullable=True)  # هر خط یک لینک شبکه اجتماعی
+
+    robots_extra_rules = db.Column(db.Text, nullable=True)
+    sitemap_include_posts = db.Column(db.Boolean, nullable=False, default=True)
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
 
 class Provider(db.Model):

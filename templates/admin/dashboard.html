@@ -72,6 +72,22 @@
           <span>همین حالا در صفحه اصلی منتشر شود</span>
         </label>
 
+        <details style="margin-top: 14px;">
+          <summary style="cursor: pointer; color: var(--neon-blue); font-size: 0.85rem; font-weight: 700;">
+            <i class="fas fa-magnifying-glass-chart"></i> تنظیمات سئو (اختیاری — بعداً هم قابل ویرایش است)
+          </summary>
+          <div style="margin-top: 14px;">
+            <label for="new-post-focus-keyword">کلمه کلیدی هدف</label>
+            <input type="text" id="new-post-focus-keyword" name="focus_keyword" placeholder="مثلاً: آموزش سئو">
+
+            <label for="new-post-seo-title">عنوان سئو</label>
+            <input type="text" id="new-post-seo-title" name="seo_title" maxlength="70" placeholder="در صورت خالی بودن، از عنوان پست استفاده می‌شود">
+
+            <label for="new-post-meta-description">توضیحات متا</label>
+            <textarea id="new-post-meta-description" name="meta_description" rows="2" maxlength="320" placeholder="در صورت خالی بودن، از خلاصه پست استفاده می‌شود"></textarea>
+          </div>
+        </details>
+
         <button type="submit" class="admin-primary-button">
           <i class="fas fa-paper-plane"></i> ذخیره پست
         </button>

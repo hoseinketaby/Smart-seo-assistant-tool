@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 
-from flask import Flask, abort, redirect, url_for, render_template
+from flask import Flask, Response, abort, redirect, url_for, render_template
 from flask_login import current_user
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -78,9 +78,33 @@ def create_app():
             except Exception:
                 db.session.rollback()
 
+            # ستون‌های جدید تب سئو
+            seo_columns = [
+                ("site_posts", "focus_keyword", "VARCHAR(160)"),
+                ("site_posts", "seo_title", "VARCHAR(70)"),
+                ("site_posts", "meta_description", "VARCHAR(320)"),
+                ("site_posts", "canonical_url", "VARCHAR(1024)"),
+                ("site_posts", "og_image_url", "VARCHAR(1024)"),
+                ("site_posts", "meta_robots_noindex", "BOOLEAN DEFAULT 0"),
+                ("site_posts", "meta_robots_nofollow", "BOOLEAN DEFAULT 0"),
+                ("site_posts", "seo_score", "INTEGER DEFAULT 0"),
+            ]
+            for table, column, col_type in seo_columns:
+                try:
+                    db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type};"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
     @app.context_processor
     def inject_global_template_values():
-        return {"current_admin": get_current_admin(), "services_catalog": SERVICES}
+        from seo_service import get_seo_settings
+
+        return {
+            "current_admin": get_current_admin(),
+            "services_catalog": SERVICES,
+            "seo_settings": get_seo_settings(),
+        }
 
     @app.route("/")
     def index():
@@ -108,9 +132,21 @@ def create_app():
 
     @app.route("/posts/<int:post_id>")
     def post_detail(post_id):
+        from seo_service import (
+            effective_meta_description,
+            effective_og_image,
+            effective_seo_title,
+            get_seo_settings,
+        )
+
         post = SitePost.query.get_or_404(post_id)
         if not post.is_published and get_current_admin() is None:
             abort(404)
+
+        seo_settings = get_seo_settings()
+        robots_directives = []
+        robots_directives.append("noindex" if post.meta_robots_noindex else "index")
+        robots_directives.append("nofollow" if post.meta_robots_nofollow else "follow")
 
         return render_template(
             "post_detail.html",
@@ -119,7 +155,72 @@ def create_app():
                 post.category,
                 {"label": "مطالب سایت", "icon": "fa-file-lines"},
             ),
+            seo_title=effective_seo_title(post, seo_settings),
+            seo_description=effective_meta_description(post, seo_settings),
+            seo_image=effective_og_image(post, seo_settings),
+            seo_canonical=post.canonical_url or url_for("post_detail", post_id=post.id, _external=True),
+            seo_robots=", ".join(robots_directives),
         )
+
+    @app.route("/sitemap.xml")
+    def sitemap_xml():
+        from seo_service import get_seo_settings
+
+        seo_settings = get_seo_settings()
+        urls = [
+            {"loc": url_for("index", _external=True), "changefreq": "daily", "priority": "1.0"},
+            {"loc": url_for("services", _external=True), "changefreq": "weekly", "priority": "0.6"},
+            {"loc": url_for("plans", _external=True), "changefreq": "weekly", "priority": "0.6"},
+        ]
+
+        if seo_settings.sitemap_include_posts:
+            published_posts = (
+                SitePost.query.filter_by(is_published=True)
+                .filter_by(meta_robots_noindex=False)
+                .order_by(SitePost.updated_at.desc())
+                .all()
+            )
+            for post in published_posts:
+                urls.append(
+                    {
+                        "loc": url_for("post_detail", post_id=post.id, _external=True),
+                        "lastmod": (post.updated_at or post.created_at).strftime("%Y-%m-%d"),
+                        "changefreq": "weekly",
+                        "priority": "0.8",
+                    }
+                )
+
+        xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>']
+        xml_parts.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+        for item in urls:
+            xml_parts.append("<url>")
+            xml_parts.append(f"<loc>{item['loc']}</loc>")
+            if item.get("lastmod"):
+                xml_parts.append(f"<lastmod>{item['lastmod']}</lastmod>")
+            xml_parts.append(f"<changefreq>{item['changefreq']}</changefreq>")
+            xml_parts.append(f"<priority>{item['priority']}</priority>")
+            xml_parts.append("</url>")
+        xml_parts.append("</urlset>")
+
+        return Response("".join(xml_parts), mimetype="application/xml")
+
+    @app.route("/robots.txt")
+    def robots_txt():
+        from seo_service import get_seo_settings
+
+        seo_settings = get_seo_settings()
+        lines = ["User-agent: *", "Allow: /"]
+        lines.append("Disallow: /admin")
+        lines.append("Disallow: /dashboard")
+
+        if seo_settings.robots_extra_rules:
+            lines.append("")
+            lines.extend(seo_settings.robots_extra_rules.splitlines())
+
+        lines.append("")
+        lines.append(f"Sitemap: {url_for('sitemap_xml', _external=True)}")
+
+        return Response("\n".join(lines), mimetype="text/plain")
 
     @app.route("/services")
     def services():

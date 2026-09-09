@@ -18,7 +18,16 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
-from models import AdminAccount, SitePost
+from models import AdminAccount, SeoSetting, SitePost
+from seo_service import (
+    analyze_post_seo,
+    effective_meta_description,
+    effective_seo_title,
+    get_seo_settings,
+    site_seo_overview,
+    sync_post_seo_score,
+    update_seo_settings,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -141,6 +150,16 @@ def _make_excerpt(content, limit=240):
     return f"{shortened or compact_content[: limit - 1]}…"
 
 
+def _validate_optional_url(value, field_label, errors):
+    if not value:
+        return None
+    parsed_url = urlparse(value)
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+        errors.append(f"{field_label} باید با http یا https شروع شود.")
+        return value
+    return value
+
+
 def _post_form_data():
     title = (request.form.get("title") or "").strip()
     excerpt = (request.form.get("excerpt") or "").strip()
@@ -169,6 +188,25 @@ def _post_form_data():
         if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
             errors.append("نشانی تصویر باید با http یا https شروع شود.")
 
+    # ---- فیلدهای سئو ----
+    focus_keyword = (request.form.get("focus_keyword") or "").strip()
+    seo_title = (request.form.get("seo_title") or "").strip()
+    meta_description = (request.form.get("meta_description") or "").strip()
+    canonical_url = (request.form.get("canonical_url") or "").strip()
+    og_image_url = (request.form.get("og_image_url") or "").strip()
+    meta_robots_noindex = request.form.get("meta_robots_noindex") == "on"
+    meta_robots_nofollow = request.form.get("meta_robots_nofollow") == "on"
+
+    if len(focus_keyword) > 160:
+        errors.append("کلمه کلیدی هدف نباید بیشتر از ۱۶۰ کاراکتر باشد.")
+    if len(seo_title) > 70:
+        errors.append("عنوان سئو نباید بیشتر از ۷۰ کاراکتر باشد.")
+    if len(meta_description) > 320:
+        errors.append("توضیحات متا نباید بیشتر از ۳۲۰ کاراکتر باشد.")
+
+    canonical_url = _validate_optional_url(canonical_url, "نشانی کنونیکال", errors)
+    og_image_url = _validate_optional_url(og_image_url, "نشانی تصویر شبکه‌های اجتماعی", errors)
+
     return {
         "title": title,
         "excerpt": excerpt or _make_excerpt(content),
@@ -176,6 +214,13 @@ def _post_form_data():
         "category": category,
         "cover_image_url": cover_image_url or None,
         "is_published": is_published,
+        "focus_keyword": focus_keyword or None,
+        "seo_title": seo_title or None,
+        "meta_description": meta_description or None,
+        "canonical_url": canonical_url or None,
+        "og_image_url": og_image_url or None,
+        "meta_robots_noindex": meta_robots_noindex,
+        "meta_robots_nofollow": meta_robots_nofollow,
     }, errors
 
 
@@ -284,6 +329,7 @@ def create_post():
         published_at=now if post_data["is_published"] else None,
         **post_data,
     )
+    sync_post_seo_score(post)
     db.session.add(post)
     db.session.commit()
     flash(
@@ -314,15 +360,22 @@ def edit_post(post_id):
         if post.is_published and not was_published:
             post.published_at = datetime.now(timezone.utc)
 
+        sync_post_seo_score(post)
         db.session.commit()
         flash("تغییرات پست ذخیره شد.", "success")
-        return redirect(url_for("admin.index"))
+        return redirect(url_for("admin.edit_post", post_id=post.id))
 
+    seo_settings = get_seo_settings()
     return render_template(
         "admin/edit_post.html",
         admin=get_current_admin(),
         post=post,
         categories=POST_CATEGORIES,
+        seo_analysis=analyze_post_seo(post, seo_settings),
+        seo_settings=seo_settings,
+        preview_title=effective_seo_title(post, seo_settings),
+        preview_description=effective_meta_description(post, seo_settings),
+        preview_url=url_for("post_detail", post_id=post.id, _external=True),
     )
 
 
@@ -375,3 +428,92 @@ def create_admin_account():
     db.session.commit()
     flash("مدیر جدید با موفقیت اضافه شد.", "success")
     return redirect(url_for("admin.index"))
+
+
+# ===================== تب سئو سایت (مشابه رنک‌مث) =====================
+
+@admin_bp.route("/admin/seo", methods=["GET"])
+@admin_required
+def seo_dashboard():
+    posts = SitePost.query.order_by(SitePost.updated_at.desc()).all()
+    overview = site_seo_overview(posts)
+    settings = get_seo_settings()
+
+    # امتیازهای محاسبه‌شده را برای نمایش سریع در جدول‌های بعدی هم ذخیره کن
+    changed = False
+    for post, result in overview["analyzed"]:
+        if post.seo_score != result["score"]:
+            post.seo_score = result["score"]
+            changed = True
+    if changed:
+        db.session.commit()
+
+    return render_template(
+        "admin/seo_dashboard.html",
+        admin=get_current_admin(),
+        overview=overview,
+        settings=settings,
+        categories=POST_CATEGORIES,
+    )
+
+
+@admin_bp.route("/admin/seo/settings", methods=["GET", "POST"])
+@admin_required
+def seo_settings_view():
+    settings = get_seo_settings()
+
+    if request.method == "POST":
+        _require_valid_csrf()
+
+        site_name = (request.form.get("site_name") or "").strip()
+        title_separator = (request.form.get("title_separator") or "—").strip()[:10]
+        default_meta_title = (request.form.get("default_meta_title") or "").strip()
+        default_meta_description = (request.form.get("default_meta_description") or "").strip()
+        default_og_image_url = (request.form.get("default_og_image_url") or "").strip()
+        google_site_verification = (request.form.get("google_site_verification") or "").strip()
+        bing_site_verification = (request.form.get("bing_site_verification") or "").strip()
+        google_analytics_id = (request.form.get("google_analytics_id") or "").strip()
+        schema_type = (request.form.get("schema_type") or "Organization").strip()
+        organization_name = (request.form.get("organization_name") or "").strip()
+        social_profile_urls = (request.form.get("social_profile_urls") or "").strip()
+        robots_extra_rules = (request.form.get("robots_extra_rules") or "").strip()
+        sitemap_include_posts = request.form.get("sitemap_include_posts") == "on"
+
+        errors = []
+        if len(default_meta_title) > 70:
+            errors.append("عنوان پیش‌فرض سئو نباید بیشتر از ۷۰ کاراکتر باشد.")
+        if len(default_meta_description) > 320:
+            errors.append("توضیحات پیش‌فرض متا نباید بیشتر از ۳۲۰ کاراکتر باشد.")
+
+        default_og_image_url = _validate_optional_url(default_og_image_url, "نشانی تصویر پیش‌فرض", errors) or ""
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return redirect(url_for("admin.seo_settings_view"))
+
+        update_seo_settings(
+            {
+                "site_name": site_name or None,
+                "title_separator": title_separator or "—",
+                "default_meta_title": default_meta_title or None,
+                "default_meta_description": default_meta_description or None,
+                "default_og_image_url": default_og_image_url or None,
+                "google_site_verification": google_site_verification or None,
+                "bing_site_verification": bing_site_verification or None,
+                "google_analytics_id": google_analytics_id or None,
+                "schema_type": schema_type or "Organization",
+                "organization_name": organization_name or None,
+                "social_profile_urls": social_profile_urls or None,
+                "robots_extra_rules": robots_extra_rules or None,
+                "sitemap_include_posts": sitemap_include_posts,
+            }
+        )
+        flash("تنظیمات کلی سئو ذخیره شد.", "success")
+        return redirect(url_for("admin.seo_settings_view"))
+
+    return render_template(
+        "admin/seo_settings.html",
+        admin=get_current_admin(),
+        settings=settings,
+    )

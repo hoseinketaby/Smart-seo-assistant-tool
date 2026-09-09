@@ -47,9 +47,130 @@
         <span>این پست منتشر باشد</span>
       </label>
 
+      <div class="seo-metabox">
+        <div class="admin-card-heading seo-metabox-header">
+          <div>
+            <span class="admin-card-icon"><i class="fas fa-magnifying-glass-chart"></i></span>
+            <h2>بهینه‌سازی سئوی این پست</h2>
+          </div>
+          <div class="seo-metabox-score">
+            <div class="seo-score-ring status-{{ seo_analysis.status }}" id="seoScoreRing" style="--score: {{ seo_analysis.score }};">
+              <span id="seoScoreValue">{{ seo_analysis.score }}</span>
+            </div>
+            <div class="seo-metabox-score-label">
+              <strong>امتیاز سئو</strong>
+              <span>بعد از ذخیره دوباره محاسبه می‌شود</span>
+            </div>
+          </div>
+        </div>
+
+        <label for="focus_keyword">کلمه کلیدی هدف (Focus Keyword)</label>
+        <input type="text" id="focus_keyword" name="focus_keyword" value="{{ post.focus_keyword or '' }}" placeholder="مثلاً: آموزش سئو">
+
+        <label for="seo_title">عنوان سئو (SEO Title)</label>
+        <input type="text" id="seo_title" name="seo_title" maxlength="70" value="{{ post.seo_title or '' }}" placeholder="{{ post.title }}">
+        <div class="seo-field-hint">
+          <span>در گوگل به‌جای عنوان اصلی پست نمایش داده می‌شود.</span>
+          <span class="seo-counter" id="titleCounter">0 / 70</span>
+        </div>
+
+        <label for="meta_description">توضیحات متا (Meta Description)</label>
+        <textarea id="meta_description" name="meta_description" rows="3" maxlength="320" class="seo-textarea-sm" placeholder="{{ post.excerpt }}">{{ post.meta_description or '' }}</textarea>
+        <div class="seo-field-hint">
+          <span>خلاصه‌ای که زیر عنوان در نتایج جستجو نمایش داده می‌شود.</span>
+          <span class="seo-counter" id="descriptionCounter">0 / 160</span>
+        </div>
+
+        <div class="seo-snippet-preview" id="snippetPreview">
+          <div class="snippet-url">{{ preview_url }}</div>
+          <div class="snippet-title" id="snippetTitle">{{ preview_title }}</div>
+          <div class="snippet-description" id="snippetDescription">{{ preview_description }}</div>
+        </div>
+
+        <div class="admin-form-row">
+          <div>
+            <label for="canonical_url">نشانی کنونیکال (اختیاری)</label>
+            <input type="url" id="canonical_url" name="canonical_url" value="{{ post.canonical_url or '' }}" placeholder="{{ preview_url }}">
+          </div>
+          <div>
+            <label for="og_image_url">تصویر شبکه‌های اجتماعی (اختیاری)</label>
+            <input type="url" id="og_image_url" name="og_image_url" value="{{ post.og_image_url or '' }}" placeholder="در صورت خالی بودن، تصویر شاخص پست استفاده می‌شود">
+          </div>
+        </div>
+
+        <div class="seo-robots-row">
+          <label class="admin-checkbox">
+            <input type="checkbox" name="meta_robots_noindex" {% if post.meta_robots_noindex %}checked{% endif %}>
+            <span>noindex — این پست در نتایج جستجو نمایش داده نشود</span>
+          </label>
+          <label class="admin-checkbox">
+            <input type="checkbox" name="meta_robots_nofollow" {% if post.meta_robots_nofollow %}checked{% endif %}>
+            <span>nofollow — گوگل لینک‌های داخل این پست را دنبال نکند</span>
+          </label>
+        </div>
+
+        <h3 style="margin: 22px 0 14px; color: var(--text-main); font-size: 0.95rem;">
+          <i class="fas fa-list-check"></i> چک‌لیست سئو
+        </h3>
+        <ul class="seo-checklist">
+          {% for check in seo_analysis.checks %}
+            <li class="{% if check.passed %}passed{% else %}failed{% endif %}">
+              <i class="fas {% if check.passed %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+              <div>
+                <strong>{{ check.label }}</strong>
+                <span>{{ check.hint }}</span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
       <button type="submit" class="admin-primary-button">
         <i class="fas fa-floppy-disk"></i> ذخیره تغییرات
       </button>
     </form>
   </section>
+
+  <script>
+    (function () {
+      var titleInput = document.getElementById('seo_title');
+      var descriptionInput = document.getElementById('meta_description');
+      var postTitle = {{ post.title|tojson }};
+      var postExcerpt = {{ post.excerpt|tojson }};
+
+      var titleCounter = document.getElementById('titleCounter');
+      var descriptionCounter = document.getElementById('descriptionCounter');
+      var snippetTitle = document.getElementById('snippetTitle');
+      var snippetDescription = document.getElementById('snippetDescription');
+
+      function setCounter(el, length, min, max) {
+        el.textContent = length + ' / ' + max;
+        el.classList.remove('good', 'warn', 'bad');
+        if (length === 0) {
+          el.classList.add('bad');
+        } else if (length < min || length > max) {
+          el.classList.add('warn');
+        } else {
+          el.classList.add('good');
+        }
+      }
+
+      function refreshTitle() {
+        var value = titleInput.value.trim();
+        setCounter(titleCounter, value.length, 30, 60);
+        snippetTitle.textContent = value || postTitle;
+      }
+
+      function refreshDescription() {
+        var value = descriptionInput.value.trim();
+        setCounter(descriptionCounter, value.length, 70, 160);
+        snippetDescription.textContent = value || postExcerpt;
+      }
+
+      titleInput.addEventListener('input', refreshTitle);
+      descriptionInput.addEventListener('input', refreshDescription);
+      refreshTitle();
+      refreshDescription();
+    })();
+  </script>
 {% endblock %}
