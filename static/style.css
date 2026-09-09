@@ -1162,6 +1162,12 @@ a {
   color: var(--text-main);
 }
 
+.nav-dropdown { position: relative; }
+.nav-dropdown-toggle { background: none; border: 0; color: var(--text-muted); font: inherit; cursor: pointer; padding: 8px 0; }
+.nav-dropdown-menu { display: none; position: absolute; top: 100%; right: 0; min-width: 220px; padding: 8px; background: var(--surface, #fff); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.15); z-index: 20; }
+.nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown.open .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a { display: block; padding: 9px 12px; white-space: nowrap; }
+
 .header-actions {
   display: flex;
   align-items: center;

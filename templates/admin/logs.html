@@ -1,0 +1,8 @@
+{% extends "admin/base.html" %}
+{% block title %}لاگ خطاها{% endblock %}
+{% block content %}
+<section class="admin-page-heading"><h1>لاگ خطاها و باگ‌ها</h1><p>خطاهای ثبت‌شده همراه با مسیر، زمان و جزئیات فنی.</p></section>
+<section class="admin-card">
+{% if logs %}{% for log in logs %}<article class="admin-post-row"><div class="admin-post-main"><h3>{{ log.error_type }} {% if log.resolved %}<span class="admin-status-badge published">رفع‌شده</span>{% else %}<span class="admin-status-badge draft">باز</span>{% endif %}</h3><div class="admin-post-meta">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }} · {{ log.method }} {{ log.path }}</div><p>{{ log.message }}</p><details><summary>جزئیات فنی</summary><pre style="white-space:pre-wrap;direction:ltr;text-align:left">{{ log.traceback }}</pre></details></div>{% if not log.resolved %}<form method="POST" action="{{ url_for('admin.resolve_error_log', log_id=log.id) }}"><input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}"><textarea name="resolution" placeholder="راه‌حل یا توضیح رفع باگ" required></textarea><button class="admin-secondary-button" type="submit">علامت‌گذاری رفع شد</button></form>{% endif %}</article>{% endfor %}{% else %}<div class="admin-empty-state">هنوز خطایی ثبت نشده است.</div>{% endif %}
+</section>
+{% endblock %}

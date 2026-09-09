@@ -1,13 +1,14 @@
 import os
+import traceback
 from datetime import timedelta
 
-from flask import Flask, Response, abort, redirect, url_for, render_template
+from flask import Flask, Response, abort, redirect, url_for, render_template, request
 from flask_login import current_user
 from dotenv import load_dotenv
 from sqlalchemy import text
 
 from extensions import db, login_manager
-from models import SitePost, User
+from models import ErrorLog, SitePost, User
 from services_catalog import SERVICES, get_service
 
 load_dotenv()
@@ -33,6 +34,23 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_error(error):
+        if app.config.get("TESTING"):
+            raise error
+        try:
+            log = ErrorLog(
+                error_type=type(error).__name__, message=str(error) or "خطای بدون پیام",
+                traceback=traceback.format_exc(), path=request.path if request else None,
+                method=request.method if request else None,
+                user_agent=request.headers.get("User-Agent") if request else None,
+            )
+            db.session.add(log)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return render_template("error.html"), 500
 
     @app.after_request
     def set_utf8_response_charset(response):

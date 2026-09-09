@@ -37,6 +37,9 @@
     <a href="{{ url_for('admin.seo_settings_view') }}" class="admin-tab {% if request.endpoint == 'admin.seo_settings_view' %}active{% endif %}">
       <i class="fas fa-gears"></i> تنظیمات سئو
     </a>
+    <a href="{{ url_for('admin.error_logs') }}" class="admin-tab {% if request.endpoint == 'admin.error_logs' %}active{% endif %}">
+      <i class="fas fa-triangle-exclamation"></i> لاگ خطاها
+    </a>
   </nav>
 
   <main class="admin-shell">

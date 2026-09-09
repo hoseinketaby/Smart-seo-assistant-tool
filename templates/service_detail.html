@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ service.title }} — خدمات کسب و کار</title>
+  <meta name="description" content="{{ service.meta_description }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="landing-body">
+  {% include "_header.html" %}
+  <main>
+    <section class="services-hero">
+      <span class="hero-badge"><i class="fas {{ service.icon }}"></i> {{ service.hero_badge }}</span>
+      <h1>{{ service.hero_title }}</h1>
+      <p>{{ service.hero_lead }}</p>
+      <a class="btn-call-hero" href="tel:09355650995"><i class="fas fa-phone"></i> مشاوره رایگان</a>
+    </section>
+    <section class="section service-detail-content">
+      <div class="section-heading"><span class="eyebrow">{{ service.title }}</span><h2>راهکارهای تخصصی برای رشد شما</h2><p>{{ service.tagline }}</p></div>
+      <div class="services-grid">
+        {% for item in service.highlights %}<article class="service-card"><div class="service-icon-wrap"><i class="fas {{ item.icon }}"></i></div><h3>{{ item.title }}</h3><p class="service-desc">{{ item.text }}</p></article>{% endfor %}
+      </div>
+      <div class="section-heading"><h2>مراحل همکاری</h2></div>
+      <div class="services-grid">{% for step in service.steps %}<article class="service-card"><span class="service-number">{{ loop.index }}</span><h3>{{ step.title }}</h3><p class="service-desc">{{ step.text }}</p></article>{% endfor %}</div>
+    </section>
+  </main>
+  {% include "_footer.html" %}
+</body>
+</html>

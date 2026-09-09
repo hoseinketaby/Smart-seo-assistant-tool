@@ -38,6 +38,20 @@ class AdminAccount(db.Model):
         cascade="all, delete-orphan",
     )
 
+class ErrorLog(db.Model):
+    __tablename__ = "error_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    level = db.Column(db.String(20), nullable=False, default="ERROR")
+    error_type = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    traceback = db.Column(db.Text, nullable=True)
+    path = db.Column(db.String(1024), nullable=True)
+    method = db.Column(db.String(20), nullable=True)
+    user_agent = db.Column(db.String(512), nullable=True)
+    resolved = db.Column(db.Boolean, nullable=False, default=False)
+    resolution = db.Column(db.Text, nullable=True)
+
 
 class SitePost(db.Model):
     __tablename__ = "site_posts"

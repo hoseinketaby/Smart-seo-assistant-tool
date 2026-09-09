@@ -18,7 +18,7 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
-from models import AdminAccount, SeoSetting, SitePost
+from models import AdminAccount, ErrorLog, SeoSetting, SitePost
 from seo_service import (
     analyze_post_seo,
     effective_meta_description,
@@ -243,6 +243,21 @@ def inject_admin_template_values():
         "admin_csrf_token": _csrf_token,
         "post_categories": POST_CATEGORIES,
     }
+
+@admin_bp.route("/admin/logs")
+@admin_required
+def error_logs():
+    logs = ErrorLog.query.order_by(ErrorLog.created_at.desc()).limit(200).all()
+    return render_template("admin/logs.html", admin=get_current_admin(), logs=logs)
+
+@admin_bp.route("/admin/logs/<int:log_id>/resolve", methods=["POST"])
+@admin_required
+def resolve_error_log(log_id):
+    log = ErrorLog.query.get_or_404(log_id)
+    log.resolved = True
+    log.resolution = request.form.get("resolution", "رفع و بررسی شد")[:4000]
+    db.session.commit()
+    return redirect(url_for("admin.error_logs"))
 
 
 @admin_bp.route("/admin", methods=["GET", "POST"])

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>خدمات طراحی سایت، برنامه‌نویسی، SEO و هوش مصنوعی — دستیار SEO</title>
+  <title>خدمات کسب و کار — دستیار SEO</title>
   <meta name="description" content="خدمات حرفه‌ای طراحی سایت، برنامه‌نویسی، سئو، ساخت چت‌بات هوش مصنوعی و تحلیل داده. مناسب کسب‌وکارهای کوچک تا شرکت‌های بزرگ.">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,7 +21,10 @@
     <nav class="main-nav" id="mainNav">
       <a href="{{ url_for('index') }}">خانه</a>
       <a href="{{ url_for('index') }}#features">امکانات</a>
-      <a href="{{ url_for('services') }}">خدمات ما</a>
+      <div class="nav-dropdown" id="navServicesDropdown">
+        <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">خدمات کسب و کار <i class="fas fa-chevron-down"></i></button>
+        <div class="nav-dropdown-menu"><a href="{{ url_for('services') }}">همه خدمات</a>{% for service in services_catalog %}<a href="{{ url_for('service_detail', service_key=service.key) }}"><i class="fas {{ service.icon }}"></i> {{ service.menu_title }}</a>{% endfor %}</div>
+      </div>
       <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
       <a href="{{ url_for('index') }}#about">درباره ما</a>
       <a href="{{ url_for('index') }}#contact">ارتباط با ما</a>
@@ -70,7 +73,7 @@
     <div class="services-grid">
 
       <!-- خدمت ۱: طراحی سایت -->
-      <article class="service-card">
+      <a class="service-card" href="{{ url_for('service_detail', service_key='web-design') }}">
         <span class="service-number">۰۱</span>
         <div class="service-icon-wrap">
           <i class="fas fa-laptop-code"></i>
@@ -91,10 +94,10 @@
           <span class="tier-tag">کسب‌وکار کوچک</span>
           <span class="tier-tag">شرکت بزرگ</span>
         </div>
-      </article>
+      </a>
 
       <!-- خدمت ۲: برنامه‌نویسی -->
-      <article class="service-card">
+      <a class="service-card" href="{{ url_for('service_detail', service_key='programming') }}">
         <span class="service-number">۰۲</span>
         <div class="service-icon-wrap">
           <i class="fas fa-code"></i>
@@ -115,10 +118,10 @@
           <span class="tier-tag">استارتاپ</span>
           <span class="tier-tag">شرکت</span>
         </div>
-      </article>
+      </a>
 
       <!-- خدمت ۳: SEO -->
-      <article class="service-card featured" data-aos="fade-up">
+      <a class="service-card featured" data-aos="fade-up" href="{{ url_for('service_detail', service_key='seo') }}">
         <span class="service-number">۰۳</span>
         <div class="service-icon-wrap">
           <i class="fas fa-chart-line"></i>
@@ -143,10 +146,10 @@
           <span class="tier-tag">کسب‌وکار کوچک</span>
           <span class="tier-tag">شرکت بزرگ</span>
         </div>
-      </article>
+      </a>
 
       <!-- خدمت ۴: ساخت چت‌بات -->
-      <article class="service-card">
+      <a class="service-card" href="{{ url_for('service_detail', service_key='chatbot') }}">
         <span class="service-number">۰۴</span>
         <div class="service-icon-wrap">
           <i class="fas fa-robot"></i>
@@ -167,10 +170,10 @@
           <span class="tier-tag">فروشگاه</span>
           <span class="tier-tag">شرکت بزرگ</span>
         </div>
-      </article>
+      </a>
 
       <!-- خدمت ۵: هوش مصنوعی و تحلیل داده -->
-      <article class="service-card">
+      <a class="service-card" href="{{ url_for('service_detail', service_key='ai') }}">
         <span class="service-number">۰۵</span>
         <div class="service-icon-wrap">
           <i class="fas fa-brain"></i>
@@ -191,7 +194,7 @@
           <span class="tier-tag">شرکت متوسط</span>
           <span class="tier-tag">شرکت بزرگ</span>
         </div>
-      </article>
+      </a>
 
     </div>
   </section>
