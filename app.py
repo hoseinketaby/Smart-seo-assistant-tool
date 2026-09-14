@@ -119,10 +119,15 @@ def create_app():
     def inject_global_template_values():
         from seo_service import get_seo_settings
 
+        settings = get_seo_settings()
+        site_name = settings.site_name or "کسب یار"
+        site_slogan = settings.organization_name or "هوشمند سازی کسب و کار با استفاده از هوش مصنوعی"
         return {
+            "site_name": site_name,
+            "site_slogan": site_slogan,
             "current_admin": get_current_admin(),
             "services_catalog": SERVICES,
-            "seo_settings": get_seo_settings(),
+            "seo_settings": settings,
         }
 
     @app.route("/")

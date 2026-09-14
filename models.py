@@ -63,6 +63,7 @@ class SitePost(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(40), nullable=False, default="news", index=True)
     cover_image_url = db.Column(db.String(1024), nullable=True)
+    cover_image_alt = db.Column(db.String(180), nullable=True)
     is_published = db.Column(db.Boolean, nullable=False, default=True, index=True)
     published_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -81,6 +82,8 @@ class SitePost(db.Model):
     og_image_url = db.Column(db.String(1024), nullable=True)
     meta_robots_noindex = db.Column(db.Boolean, nullable=False, default=False)
     meta_robots_nofollow = db.Column(db.Boolean, nullable=False, default=False)
+    schema_type = db.Column(db.String(30), nullable=False, default="Article")
+    custom_schema_json = db.Column(db.Text, nullable=True)
     seo_score = db.Column(db.Integer, nullable=False, default=0)
 
     author = db.relationship("AdminAccount", back_populates="posts")
@@ -106,6 +109,7 @@ class SeoSetting(db.Model):
     schema_type = db.Column(db.String(30), nullable=False, default="Organization")
     organization_name = db.Column(db.String(160), nullable=True)
     social_profile_urls = db.Column(db.Text, nullable=True)  # هر خط یک لینک شبکه اجتماعی
+    custom_schema_json = db.Column(db.Text, nullable=True)
 
     robots_extra_rules = db.Column(db.Text, nullable=True)
     sitemap_include_posts = db.Column(db.Boolean, nullable=False, default=True)

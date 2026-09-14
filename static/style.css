@@ -1142,6 +1142,41 @@ a {
   color: var(--text-main);
   text-decoration: none;
   white-space: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(59, 110, 246, 0.18));
+  color: var(--neon-blue);
+  font-weight: 900;
+  font-size: 1.05rem;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.brand-slogan {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .main-nav {

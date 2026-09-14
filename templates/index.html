@@ -24,6 +24,23 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', '{{ seo_settings.google_analytics_id }}');
+
+    // باز و بستن زیرمنوی خدمات
+    const navServicesDropdown = document.getElementById('navServicesDropdown');
+    const navServicesToggle = navServicesDropdown ? navServicesDropdown.querySelector('.nav-dropdown-toggle') : null;
+    if (navServicesToggle) {
+      navServicesToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = navServicesDropdown.classList.toggle('open');
+        navServicesToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+      document.addEventListener('click', (e) => {
+        if (!navServicesDropdown.contains(e.target)) {
+          navServicesDropdown.classList.remove('open');
+          navServicesToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
   </script>
   {% endif %}
 </head>
@@ -31,7 +48,13 @@
 
   <!-- ===================== هدر ===================== -->
   <header class="site-header">
-    <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="brand-icon">ک</span>
+      <span class="brand-text">
+        <span class="brand-title">{{ site_name }}</span>
+        <span class="brand-slogan">{{ site_slogan }}</span>
+      </span>
+    </a>
 
     <button class="nav-toggle" id="navToggle" aria-label="باز کردن منو">
       <i class="fas fa-bars"></i>
@@ -41,8 +64,24 @@
       <a href="#home">خانه</a>
       <a href="#features">امکانات</a>
       <a href="#posts">مطالب سایت</a>
-      <a href="{{ url_for('services') }}">خدمات طراحی سایت و سئو</a>
-      <a href="{{ url_for('plans') }}">پلن‌های ابزار سئو</a>
+
+      <div class="nav-dropdown" id="navServicesDropdown">
+        <button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          خدمات ما <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a href="{{ url_for('services') }}">
+            <i class="fas fa-grip"></i> همه خدمات
+          </a>
+          {% for service in services_catalog %}
+            <a href="{{ url_for('service_detail', service_key=service.key) }}">
+              <i class="fas {{ service.icon }}"></i> {{ service.menu_title }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <a href="{{ url_for('plans') }}">پلن‌های ابزاری سئو</a>
       <a href="#about">درباره ما</a>
       <a href="#contact">ارتباط با ما</a>
     </nav>

@@ -489,12 +489,14 @@ def seo_settings_view():
         bing_site_verification = (request.form.get("bing_site_verification") or "").strip()
         google_analytics_id = (request.form.get("google_analytics_id") or "").strip()
         schema_type = (request.form.get("schema_type") or "Organization").strip()
-        organization_name = (request.form.get("organization_name") or "").strip()
+        site_slogan = (request.form.get("site_slogan") or "").strip()
         social_profile_urls = (request.form.get("social_profile_urls") or "").strip()
         robots_extra_rules = (request.form.get("robots_extra_rules") or "").strip()
         sitemap_include_posts = request.form.get("sitemap_include_posts") == "on"
 
         errors = []
+        if len(site_slogan) > 220:
+            errors.append("شعار سایت خیلی طولانی است.")
         if len(default_meta_title) > 70:
             errors.append("عنوان پیش‌فرض سئو نباید بیشتر از ۷۰ کاراکتر باشد.")
         if len(default_meta_description) > 320:
@@ -518,7 +520,7 @@ def seo_settings_view():
                 "bing_site_verification": bing_site_verification or None,
                 "google_analytics_id": google_analytics_id or None,
                 "schema_type": schema_type or "Organization",
-                "organization_name": organization_name or None,
+                "organization_name": site_slogan or None,
                 "social_profile_urls": social_profile_urls or None,
                 "robots_extra_rules": robots_extra_rules or None,
                 "sitemap_include_posts": sitemap_include_posts,

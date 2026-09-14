@@ -29,8 +29,8 @@
         <div class="admin-form">
           <div class="admin-form-row">
             <div>
-              <label for="site_name">نام سایت</label>
-              <input type="text" id="site_name" name="site_name" value="{{ settings.site_name or '' }}" placeholder="دستیار SEO">
+            <label for="site_name">نام سایت</label>
+            <input type="text" id="site_name" name="site_name" value="{{ settings.site_name or '' }}" placeholder="{{ site_name }}">
             </div>
             <div>
               <label for="title_separator">جداکننده عنوان</label>
@@ -39,7 +39,7 @@
           </div>
 
           <label for="default_meta_title">عنوان پیش‌فرض سئو (صفحه اصلی)</label>
-          <input type="text" id="default_meta_title" name="default_meta_title" maxlength="70" value="{{ settings.default_meta_title or '' }}" placeholder="دستیار SEO — تحلیل و بهینه‌سازی محتوا با هوش مصنوعی">
+          <input type="text" id="default_meta_title" name="default_meta_title" maxlength="70" value="{{ settings.default_meta_title or '' }}" placeholder="{{ site_name }} — {{ site_slogan }}">
 
           <label for="default_meta_description">توضیحات پیش‌فرض متا (صفحه اصلی و پست‌های بدون توضیح)</label>
           <textarea id="default_meta_description" name="default_meta_description" rows="3" maxlength="320" class="seo-textarea-sm" placeholder="توضیح کوتاهی درباره سایت شما...">{{ settings.default_meta_description or '' }}</textarea>
@@ -80,9 +80,9 @@
               <option value="LocalBusiness" {% if settings.schema_type == 'LocalBusiness' %}selected{% endif %}>کسب‌وکار محلی</option>
             </select>
           </div>
-          <div>
-            <label for="organization_name">نام سازمان / برند</label>
-            <input type="text" id="organization_name" name="organization_name" value="{{ settings.organization_name or '' }}" placeholder="نام برند شما">
+            <div>
+            <label for="site_slogan">شعار سایت</label>
+            <input type="text" id="site_slogan" name="site_slogan" value="{{ settings.organization_name or '' }}" placeholder="{{ site_slogan }}">
           </div>
         </div>
 
