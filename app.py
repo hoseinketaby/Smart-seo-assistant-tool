@@ -5,6 +5,10 @@ from datetime import timedelta
 from flask import Flask, Response, abort, redirect, url_for, render_template, request
 from flask_login import current_user
 from dotenv import load_dotenv
+from sqlalchemy import text
+from werkzeug.exceptions import HTTPException
+
+from db_migrations import run_schema_migrations
 from extensions import db, login_manager
 from models import ErrorLog, SitePost, User
 from services_catalog import SERVICES, get_service
@@ -33,14 +37,26 @@ def create_app():
         
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
 
     db.init_app(app)
     login_manager.init_app(app)
 
     @app.errorhandler(Exception)
     def handle_unexpected_error(error):
+        if isinstance(error, HTTPException):
+            return error
         if app.config.get("TESTING"):
             raise error
+        app.logger.error(
+            "Unhandled error while processing %s %s",
+            request.method,
+            request.path,
+            exc_info=error,
+        )
         try:
             log = ErrorLog(
                 error_type=type(error).__name__, message=str(error) or "خطای بدون پیام",
@@ -52,7 +68,16 @@ def create_app():
             db.session.commit()
         except Exception:
             db.session.rollback()
-        return render_template("error.html"), 500
+            app.logger.exception("Failed to persist the application error")
+        return Response(
+            "<!doctype html><html lang='fa' dir='rtl'><head><meta charset='utf-8'>"
+            "<title>خطای داخلی</title></head><body><main style='max-width:700px;"
+            "margin:10vh auto;text-align:center;font-family:sans-serif'><h1>خطای داخلی سایت</h1>"
+            "<p>خطا ثبت شد. لطفاً دوباره تلاش کنید.</p><a href='/'>بازگشت به صفحه اصلی</a>"
+            "</main></body></html>",
+            status=500,
+            mimetype="text/html",
+        )
 
     @app.after_request
     def set_utf8_response_charset(response):
@@ -78,42 +103,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        if False:
-            try:
-                db.session.execute(text("ALTER TABLE model_entries ADD COLUMN is_active BOOLEAN DEFAULT 0;"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
+        run_schema_migrations()
 
-            try:
-                db.session.execute(text("ALTER TABLE users ADD COLUMN is_subscribed BOOLEAN DEFAULT 0;"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
-            try:
-                db.session.execute(text("ALTER TABLE users ADD COLUMN trial_started_at DATETIME;"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
-            # ستون‌های جدید تب سئو
-            seo_columns = [
-                ("site_posts", "focus_keyword", "VARCHAR(160)"),
-                ("site_posts", "seo_title", "VARCHAR(70)"),
-                ("site_posts", "meta_description", "VARCHAR(320)"),
-                ("site_posts", "canonical_url", "VARCHAR(1024)"),
-                ("site_posts", "og_image_url", "VARCHAR(1024)"),
-                ("site_posts", "meta_robots_noindex", "BOOLEAN DEFAULT 0"),
-                ("site_posts", "meta_robots_nofollow", "BOOLEAN DEFAULT 0"),
-                ("site_posts", "seo_score", "INTEGER DEFAULT 0"),
-            ]
-            for table, column, col_type in seo_columns:
-                try:
-                    db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type};"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
+    @app.route("/health")
+    def health():
+        db.session.execute(text("SELECT 1"))
+        return {"status": "ok"}
 
     @app.context_processor
     def inject_global_template_values():
