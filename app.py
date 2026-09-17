@@ -25,6 +25,7 @@ def create_app():
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
     # Normalize the Render PostgreSQL connection URL.
     db_url = os.getenv("DATABASE_URL", "").strip()
@@ -120,10 +121,29 @@ def create_app():
         return {
             "site_name": site_name,
             "site_slogan": site_slogan,
+            "site_logo_url": url_for("site_logo") if settings.site_logo_data else None,
+            "site_logo_alt": settings.site_logo_alt or site_name,
             "current_admin": get_current_admin(),
             "services_catalog": SERVICES,
             "seo_settings": settings,
         }
+
+    @app.route("/site-logo")
+    def site_logo():
+        from seo_service import get_seo_settings
+
+        settings = get_seo_settings()
+        if not settings.site_logo_data:
+            abort(404)
+
+        response = Response(
+            settings.site_logo_data,
+            mimetype=settings.site_logo_mimetype or "application/octet-stream",
+        )
+        response.headers["Cache-Control"] = "public, max-age=3600, must-revalidate"
+        response.set_etag(str(settings.updated_at.timestamp()))
+        response.make_conditional(request)
+        return response
 
     @app.route("/")
     def index():

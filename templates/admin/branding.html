@@ -1,0 +1,123 @@
+{% extends "admin/base.html" %}
+
+{% block title %}هویت بصری{% endblock %}
+
+{% block content %}
+  <section class="admin-page-heading admin-page-heading-row">
+    <div>
+      <span class="eyebrow">هویت بصری</span>
+      <h1>لوگوی سایت</h1>
+      <p>لوگوی اختصاصی شما در هدر، فوتر و پنل‌ها نمایش داده می‌شود.</p>
+    </div>
+    <a href="{{ url_for('index') }}" class="admin-secondary-button" target="_blank" rel="noopener">
+      <i class="fas fa-arrow-up-right-from-square"></i> مشاهده سایت
+    </a>
+  </section>
+
+  <div class="branding-layout">
+    <section class="admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="admin-card-icon"><i class="fas fa-image"></i></span>
+          <h2>بارگذاری لوگو</h2>
+        </div>
+        <span class="admin-card-hint">PNG، JPG یا WebP</span>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" class="admin-form" id="logoUploadForm">
+        <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+        <input type="hidden" name="action" value="upload">
+
+        <label for="site-logo">فایل لوگو</label>
+        <label class="logo-upload-zone" for="site-logo" id="logoDropZone">
+          <input type="file" id="site-logo" name="site_logo" accept="image/png,image/jpeg,image/webp" required>
+          <span class="logo-upload-icon"><i class="fas fa-cloud-arrow-up"></i></span>
+          <strong>برای انتخاب فایل کلیک کنید</strong>
+          <small>یا فایل را اینجا رها کنید — حداکثر {{ max_logo_size_mb }} مگابایت</small>
+          <span class="logo-file-name" id="logoFileName"></span>
+        </label>
+
+        <label for="site-logo-alt">متن جایگزین لوگو</label>
+        <input type="text" id="site-logo-alt" name="site_logo_alt" maxlength="180"
+               value="{{ settings.site_logo_alt or site_name }}"
+               placeholder="مثلاً لوگوی {{ site_name }}">
+        <small class="field-help">این متن برای دسترس‌پذیری و زمانی که تصویر بارگذاری نشود استفاده می‌شود.</small>
+
+        <button type="submit" class="admin-primary-button">
+          <i class="fas fa-floppy-disk"></i> ذخیره و نمایش لوگو
+        </button>
+      </form>
+    </section>
+
+    <aside class="admin-card branding-preview-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="admin-card-icon"><i class="fas fa-eye"></i></span>
+          <h2>پیش‌نمایش</h2>
+        </div>
+      </div>
+
+      <div class="branding-preview-surface">
+        {% if site_logo_url %}
+          <img src="{{ site_logo_url }}" alt="{{ site_logo_alt }}" id="logoPreview">
+        {% else %}
+          <span class="branding-placeholder" id="logoPlaceholder">ک</span>
+          <img src="" alt="پیش‌نمایش لوگو" id="logoPreview" hidden>
+        {% endif %}
+        <div>
+          <strong>{{ site_name }}</strong>
+          <small>{{ site_slogan }}</small>
+        </div>
+      </div>
+
+      {% if settings.site_logo_data %}
+        <dl class="branding-file-meta">
+          <div><dt>نام فایل</dt><dd>{{ settings.site_logo_filename or 'logo' }}</dd></div>
+          <div><dt>فرمت</dt><dd>{{ settings.site_logo_mimetype }}</dd></div>
+        </dl>
+        <form method="POST" onsubmit="return confirm('لوگوی فعلی حذف شود؟');">
+          <input type="hidden" name="csrf_token" value="{{ admin_csrf_token() }}">
+          <input type="hidden" name="action" value="remove">
+          <button type="submit" class="admin-action-button danger branding-remove-button">
+            <i class="fas fa-trash"></i> حذف لوگوی فعلی
+          </button>
+        </form>
+      {% else %}
+        <p class="branding-empty-note">هنوز لوگویی بارگذاری نشده و نشان پیش‌فرض نمایش داده می‌شود.</p>
+      {% endif %}
+    </aside>
+  </div>
+
+  <script>
+    (() => {
+      const input = document.getElementById('site-logo');
+      const dropZone = document.getElementById('logoDropZone');
+      const fileName = document.getElementById('logoFileName');
+      const preview = document.getElementById('logoPreview');
+      const placeholder = document.getElementById('logoPlaceholder');
+
+      const showFile = file => {
+        if (!file) return;
+        fileName.textContent = file.name;
+        preview.src = URL.createObjectURL(file);
+        preview.hidden = false;
+        placeholder?.setAttribute('hidden', '');
+      };
+
+      input.addEventListener('change', () => showFile(input.files[0]));
+      ['dragenter', 'dragover'].forEach(name => dropZone.addEventListener(name, event => {
+        event.preventDefault();
+        dropZone.classList.add('is-dragging');
+      }));
+      ['dragleave', 'drop'].forEach(name => dropZone.addEventListener(name, event => {
+        event.preventDefault();
+        dropZone.classList.remove('is-dragging');
+      }));
+      dropZone.addEventListener('drop', event => {
+        if (!event.dataTransfer.files.length) return;
+        input.files = event.dataTransfer.files;
+        showFile(input.files[0]);
+      });
+    })();
+  </script>
+{% endblock %}

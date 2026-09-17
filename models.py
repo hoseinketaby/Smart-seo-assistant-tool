@@ -97,6 +97,10 @@ class SeoSetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     site_name = db.Column(db.String(160), nullable=True)
+    site_logo_data = db.Column(db.LargeBinary, nullable=True)
+    site_logo_mimetype = db.Column(db.String(64), nullable=True)
+    site_logo_filename = db.Column(db.String(255), nullable=True)
+    site_logo_alt = db.Column(db.String(180), nullable=True)
     title_separator = db.Column(db.String(10), nullable=False, default="—")
     default_meta_title = db.Column(db.String(70), nullable=True)
     default_meta_description = db.Column(db.String(320), nullable=True)

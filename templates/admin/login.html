@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>{% if setup_mode %}راه‌اندازی مدیریت{% else %}ورود مدیر{% endif %} — دستیار SEO</title>
+  <title>{% if setup_mode %}راه‌اندازی مدیریت{% else %}ورود مدیر{% endif %} — {{ site_name }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="auth-body admin-auth-body">
   <div class="auth-card admin-login-card">
-    <div class="admin-login-icon"><i class="fas fa-user-shield"></i></div>
+    <a href="{{ url_for('index') }}" class="auth-brand">
+      {% if site_logo_url %}<img src="{{ site_logo_url }}" alt="{{ site_logo_alt }}">{% else %}<span><i class="fas fa-user-shield"></i></span>{% endif %}
+    </a>
     <h1 class="auth-title">
       {% if setup_mode %}ساخت اولین حساب مدیر{% else %}ورود به پنل مدیریت{% endif %}
     </h1>

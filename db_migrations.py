@@ -19,6 +19,10 @@ POSTGRES_MIGRATIONS = (
     "ALTER TABLE site_posts ADD COLUMN IF NOT EXISTS schema_type VARCHAR(30) NOT NULL DEFAULT 'Article'",
     "ALTER TABLE site_posts ADD COLUMN IF NOT EXISTS custom_schema_json TEXT",
     "ALTER TABLE seo_settings ADD COLUMN IF NOT EXISTS custom_schema_json TEXT",
+    "ALTER TABLE seo_settings ADD COLUMN IF NOT EXISTS site_logo_data BYTEA",
+    "ALTER TABLE seo_settings ADD COLUMN IF NOT EXISTS site_logo_mimetype VARCHAR(64)",
+    "ALTER TABLE seo_settings ADD COLUMN IF NOT EXISTS site_logo_filename VARCHAR(255)",
+    "ALTER TABLE seo_settings ADD COLUMN IF NOT EXISTS site_logo_alt VARCHAR(180)",
 )
 
 

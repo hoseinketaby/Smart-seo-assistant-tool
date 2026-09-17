@@ -51,32 +51,9 @@
   </script>
 </head>
 <body class="landing-body">
-  <header class="site-header">
-    <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
-    <nav class="main-nav post-main-nav">
-      <a href="{{ url_for('index') }}">خانه</a>
-      <a href="{{ url_for('index') }}#posts">مطالب سایت</a>
-      <a href="{{ url_for('services') }}">خدمات</a>
-      <a href="{{ url_for('plans') }}">پلن‌ها</a>
-    </nav>
-    <div class="header-actions">
-      {% if current_admin %}
-        <a href="{{ url_for('admin.index') }}" class="btn-panel">
-          <i class="fas fa-user-shield"></i> پنل مدیریت
-        </a>
-      {% elif current_user.is_authenticated %}
-        <a href="{{ url_for('dashboard.overview') }}" class="btn-panel">
-          <i class="fas fa-gauge-high"></i> پنل کاربری
-        </a>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn-panel">
-          <i class="fas fa-right-to-bracket"></i> ورود
-        </a>
-      {% endif %}
-    </div>
-  </header>
+  {% include "_header.html" %}
 
-  <main class="post-detail-shell">
+  <main class="post-detail-shell" id="main-content" tabindex="-1">
     <a href="{{ url_for('index') }}#posts-{{ post.category }}" class="post-back-link">
       <i class="fas fa-arrow-right"></i> بازگشت به مطالب
     </a>

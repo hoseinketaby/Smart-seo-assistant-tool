@@ -16,6 +16,7 @@ from flask import (
     url_for,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from extensions import db
 from models import AdminAccount, ErrorLog, SeoSetting, SitePost
@@ -30,6 +31,13 @@ from seo_service import (
 )
 
 admin_bp = Blueprint("admin", __name__)
+
+MAX_LOGO_SIZE = 2 * 1024 * 1024
+LOGO_SIGNATURES = {
+    "image/png": lambda data: data.startswith(b"\x89PNG\r\n\x1a\n"),
+    "image/jpeg": lambda data: data.startswith(b"\xff\xd8\xff"),
+    "image/webp": lambda data: len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP",
+}
 
 POST_CATEGORIES = {
     "news": {
@@ -158,6 +166,13 @@ def _validate_optional_url(value, field_label, errors):
         errors.append(f"{field_label} باید با http یا https شروع شود.")
         return value
     return value
+
+
+def _detect_logo_mimetype(data):
+    for mimetype, matches in LOGO_SIGNATURES.items():
+        if matches(data):
+            return mimetype
+    return None
 
 
 def _post_form_data():
@@ -443,6 +458,60 @@ def create_admin_account():
     db.session.commit()
     flash("مدیر جدید با موفقیت اضافه شد.", "success")
     return redirect(url_for("admin.index"))
+
+
+@admin_bp.route("/admin/branding", methods=["GET", "POST"])
+@admin_required
+def branding_settings():
+    settings = get_seo_settings()
+
+    if request.method == "POST":
+        _require_valid_csrf()
+        action = request.form.get("action", "upload")
+
+        if action == "remove":
+            settings.site_logo_data = None
+            settings.site_logo_mimetype = None
+            settings.site_logo_filename = None
+            settings.site_logo_alt = None
+            db.session.commit()
+            flash("لوگوی سایت حذف شد و نشان پیش‌فرض نمایش داده می‌شود.", "success")
+            return redirect(url_for("admin.branding_settings"))
+
+        logo = request.files.get("site_logo")
+        alt_text = (request.form.get("site_logo_alt") or "").strip()
+
+        if not logo or not logo.filename:
+            flash("لطفاً یک فایل لوگو انتخاب کنید.", "error")
+            return redirect(url_for("admin.branding_settings"))
+        if len(alt_text) > 180:
+            flash("متن جایگزین لوگو نباید بیشتر از ۱۸۰ کاراکتر باشد.", "error")
+            return redirect(url_for("admin.branding_settings"))
+
+        logo_data = logo.stream.read(MAX_LOGO_SIZE + 1)
+        if len(logo_data) > MAX_LOGO_SIZE:
+            flash("حجم لوگو باید کمتر از ۲ مگابایت باشد.", "error")
+            return redirect(url_for("admin.branding_settings"))
+
+        detected_mimetype = _detect_logo_mimetype(logo_data)
+        if detected_mimetype is None:
+            flash("فرمت لوگو معتبر نیست. فقط PNG، JPG و WebP پذیرفته می‌شود.", "error")
+            return redirect(url_for("admin.branding_settings"))
+
+        settings.site_logo_data = logo_data
+        settings.site_logo_mimetype = detected_mimetype
+        settings.site_logo_filename = secure_filename(logo.filename)[:255] or "site-logo"
+        settings.site_logo_alt = alt_text or settings.site_name or "لوگوی سایت"
+        db.session.commit()
+        flash("لوگوی سایت با موفقیت ذخیره شد.", "success")
+        return redirect(url_for("admin.branding_settings"))
+
+    return render_template(
+        "admin/branding.html",
+        admin=get_current_admin(),
+        settings=settings,
+        max_logo_size_mb=MAX_LOGO_SIZE // (1024 * 1024),
+    )
 
 
 # ===================== تب سئو سایت (مشابه رنک‌مث) =====================

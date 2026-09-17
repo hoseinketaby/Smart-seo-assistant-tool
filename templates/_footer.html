@@ -1,7 +1,14 @@
 <footer class="site-footer">
   <div class="footer-top">
     <div class="footer-brand footer-section">
-      <a href="{{ url_for('index') }}" class="brand">🔎 دستیار SEO</a>
+      <a href="{{ url_for('index') }}" class="brand footer-brand-link">
+        {% if site_logo_url %}
+          <img src="{{ site_logo_url }}" alt="{{ site_logo_alt }}" class="brand-logo">
+        {% else %}
+          <span class="brand-icon" aria-hidden="true">ک</span>
+        {% endif %}
+        <span class="brand-title">{{ site_name }}</span>
+      </a>
       <p>پنل یکپارچه‌ی تحلیل محتوا، پژوهش کلمات کلیدی و خلاصه‌سازی هوشمند برای تیم‌های محتوا و سئوکارها.</p>
     </div>
 
@@ -40,6 +47,6 @@
   </div>
 
   <div class="footer-bottom">
-    © ۱۴۰۵ دستیار SEO — تمامی حقوق محفوظ است.
+    © ۱۴۰۵ {{ site_name }} — تمامی حقوق محفوظ است.
   </div>
 </footer>
