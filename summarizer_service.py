@@ -1,4 +1,8 @@
-import urllib.request
+import http.client
+import ipaddress
+import socket
+import ssl
+from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup
 from extensions import db
 from models import Provider, ModelEntry
@@ -6,19 +10,81 @@ from crypto_utils import decrypt_value
 from llm_config import get_active_user_llm_config
 
 
+MAX_ARTICLE_BYTES = 1024 * 1024
+
+
+def _public_address(hostname, port):
+    if not hostname or "." not in hostname:
+        raise ValueError("Invalid article host")
+    addresses = socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+    if not addresses or any(not ipaddress.ip_address(info[4][0]).is_global for info in addresses):
+        raise ValueError("Article host must resolve only to public addresses")
+    return addresses[0][4][0]
+
+
+def _fetch_public_html(url):
+    for _ in range(4):
+        target = urlsplit(url)
+        if target.scheme not in {"http", "https"} or not target.hostname or target.username or target.password:
+            raise ValueError("Invalid article URL")
+        port = target.port or (443 if target.scheme == "https" else 80)
+        if port not in {80, 443}:
+            raise ValueError("Article URL has an unsupported port")
+        address = _public_address(target.hostname, port)
+        hostname = target.hostname
+
+        if target.scheme == "https":
+            class PinnedHTTPSConnection(http.client.HTTPSConnection):
+                def connect(self):
+                    raw_socket = socket.create_connection((address, port), timeout=10)
+                    try:
+                        self.sock = self._context.wrap_socket(raw_socket, server_hostname=hostname)
+                    except Exception:
+                        raw_socket.close()
+                        raise
+
+            connection = PinnedHTTPSConnection(hostname, port, timeout=10, context=ssl.create_default_context())
+        else:
+            class PinnedHTTPConnection(http.client.HTTPConnection):
+                def connect(self):
+                    self.sock = socket.create_connection((address, port), timeout=10)
+
+            connection = PinnedHTTPConnection(hostname, port, timeout=10)
+
+        try:
+            path = (target.path or "/") + ("?" + target.query if target.query else "")
+            connection.request("GET", path, headers={
+                "Host": target.netloc,
+                "User-Agent": "Mozilla/5.0 (compatible; ArticleReader/1.0)",
+                "Accept": "text/html",
+                "Accept-Encoding": "identity",
+            })
+            response = connection.getresponse()
+            if response.status in {301, 302, 303, 307, 308}:
+                location = response.getheader("Location")
+                if not location:
+                    return None
+                url = urljoin(url, location)
+                continue
+            if response.status != 200 or "html" not in response.getheader("Content-Type", "text/html").lower():
+                return None
+            html = response.read(MAX_ARTICLE_BYTES + 1)
+            if len(html) > MAX_ARTICLE_BYTES:
+                return None
+            return html.decode("utf-8", errors="replace")
+        finally:
+            connection.close()
+    return None
+
+
 def extract_article_content(url: str) -> str:
     """
     استخراج محتوای مقاله از لینک
     """
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7",
-        }
-        
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=10) as response:
-            html = response.read().decode("utf-8")
+        html = _fetch_public_html(url)
+        if not html:
+            return None
         
         soup = BeautifulSoup(html, 'html.parser')
         
@@ -35,8 +101,7 @@ def extract_article_content(url: str) -> str:
             content = soup.get_text(strip=True)
         
         return content
-    except Exception as e:
-        print(f"Error extracting article content: {e}")
+    except Exception:
         return None
 
 
@@ -82,4 +147,4 @@ def summarize_article(url: str, title: str, user) -> str:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
+        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: خطا ثبت شد؛ لطفاً دوباره تلاش کنید"

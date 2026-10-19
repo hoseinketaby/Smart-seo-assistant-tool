@@ -22,6 +22,7 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
       <label for="identifier">ایمیل یا نام کاربری مدیر</label>

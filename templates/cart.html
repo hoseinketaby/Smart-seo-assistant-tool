@@ -45,6 +45,7 @@
                   {{ item.price|toman }} تومان
                 </span>
                 <form method="POST" action="{{ url_for('cart.remove', plan_key=item.key) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-outline-secondary btn-sm" title="حذف از سبد">
                     <i class="fas fa-trash"></i> حذف
                   </button>
@@ -58,6 +59,7 @@
               مبلغ قابل پرداخت: {{ total|toman }} تومان
             </span>
             <form method="POST" action="{{ url_for('cart.checkout') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn-hero-primary" style="border: none; cursor: pointer;">
                 <i class="fas fa-circle-check"></i> تکمیل خرید و فعال‌سازی
               </button>

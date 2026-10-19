@@ -1,31 +1,42 @@
 import os
-import traceback
+import secrets
 from datetime import timedelta
 
-from flask import Flask, Response, abort, redirect, url_for, render_template, request
+from flask import Flask, Response, abort, redirect, url_for, render_template, request, session
 from flask_login import current_user
 from dotenv import load_dotenv
 from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from db_migrations import run_schema_migrations
+from crypto_utils import _cipher, decrypt_value, encrypt_value
 from extensions import db, login_manager
-from models import ErrorLog, SitePost, User
+from models import ErrorLog, SitePost, User, Provider, KeywordProvider
 from services_catalog import SERVICES, get_service
 
 load_dotenv()
 
 
 def create_app():
+    _cipher()
     app = Flask(__name__)
     app.config["JSON_AS_ASCII"] = False
     app.json.ensure_ascii = False
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me-in-production")
+    secret_key = os.getenv("SECRET_KEY", "")
+    if len(secret_key) < 32 or secret_key == "dev-secret-change-me-in-production":
+        raise RuntimeError("SECRET_KEY must be a unique random value of at least 32 characters.")
+    if not os.getenv("ADMIN_SETUP_KEY"):
+        raise RuntimeError("ADMIN_SETUP_KEY is required to protect initial admin registration.")
+    app.config["SECRET_KEY"] = secret_key
     app.config["ADMIN_SETUP_KEY"] = os.getenv("ADMIN_SETUP_KEY", "")
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") != "development"
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+    if os.getenv("TRUST_PROXY") == "1":
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
 
     # Normalize the Render PostgreSQL connection URL.
     db_url = os.getenv("DATABASE_URL", "").strip()
@@ -46,6 +57,21 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
 
+    def csrf_token():
+        if "_csrf_token" not in session:
+            session["_csrf_token"] = secrets.token_urlsafe(32)
+        return session["_csrf_token"]
+
+    app.jinja_env.globals["csrf_token"] = csrf_token
+
+    @app.before_request
+    def protect_mutations():
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            expected = session.get("_csrf_token")
+            submitted = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token", "")
+            if not expected or not secrets.compare_digest(expected, submitted):
+                abort(400, description="درخواست نامعتبر است. صفحه را تازه‌سازی کنید.")
+
     @app.errorhandler(Exception)
     def handle_unexpected_error(error):
         if isinstance(error, HTTPException):
@@ -60,8 +86,8 @@ def create_app():
         )
         try:
             log = ErrorLog(
-                error_type=type(error).__name__, message=str(error) or "خطای بدون پیام",
-                traceback=traceback.format_exc(), path=request.path if request else None,
+                error_type=type(error).__name__, message="خطای داخلی برنامه",
+                traceback=None, path=request.path if request else None,
                 method=request.method if request else None,
                 user_agent=request.headers.get("User-Agent") if request else None,
             )
@@ -84,11 +110,20 @@ def create_app():
     def set_utf8_response_charset(response):
         if response.mimetype in {"text/html", "application/json"}:
             response.charset = "utf-8"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+        if request.is_secure:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except (TypeError, ValueError):
+            return None
 
     from auth import auth_bp
     from dashboard import dashboard_bp
@@ -105,6 +140,10 @@ def create_app():
     with app.app_context():
         db.create_all()
         run_schema_migrations()
+        for model in (Provider, KeywordProvider):
+            for provider in model.query.filter(~model.api_key_encrypted.startswith("fernet:")).all():
+                provider.api_key_encrypted = encrypt_value(decrypt_value(provider.api_key_encrypted))
+        db.session.commit()
 
     @app.route("/health")
     def health():
@@ -297,4 +336,4 @@ app = create_app()
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 7860))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=False, host="127.0.0.1", port=port)

@@ -229,4 +229,4 @@ def summarize_youtube_video_text(video_id: str, user) -> str:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
+        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: خطا ثبت شد؛ لطفاً دوباره تلاش کنید"

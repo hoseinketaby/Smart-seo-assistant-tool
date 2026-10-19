@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, current_user
+from urllib.parse import unquote, urlsplit
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from admin import authenticate_admin, login_admin, logout_admin
@@ -11,7 +12,8 @@ auth_bp = Blueprint("auth", __name__)
 
 def _safe_next(value):
     """فقط مسیرهای داخلی سایت را به‌عنوان next می‌پذیرد (جلوگیری از Open Redirect)."""
-    if value and value.startswith("/") and not value.startswith("//"):
+    decoded = unquote(value or "")
+    if decoded.startswith("/") and not decoded.startswith("//") and "\\" not in decoded and not urlsplit(decoded).netloc:
         return value
     return None
 
@@ -94,7 +96,7 @@ def login():
     return render_template("login.html", identifier="", next=next_page)
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
     if current_user.is_authenticated:
         logout_user()

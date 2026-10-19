@@ -17,6 +17,10 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
+  <script>
+    const csrfToken = {{ csrf_token()|tojson }};
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character]));
+  </script>
   <div class="layout">
 
     <!-- Sidebar: tab navigation -->
@@ -60,7 +64,7 @@
 
       <div class="sidebar-footer">
         <p class="user-email">{{ user.email }}</p>
-        <a href="{{ url_for('auth.logout') }}" class="logout-link">خروج</a>
+        <form method="POST" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="logout-link">خروج</button></form>
       </div>
     </aside>
 
@@ -226,7 +230,7 @@
             function formatAnalysisResult(text) {
               return text
                 .split('\n')
-                .map(line => line.trim())
+                .map(line => escapeHtml(line.trim()))
                 .filter(line => line)
                 .map(line => {
                   if (line.startsWith('#')) {
@@ -269,7 +273,7 @@
                 
                 fetch('/dashboard/content/analyze', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({
                     source_type: 'text',
                     text: customText,
@@ -279,13 +283,13 @@
                 .then(response => response.json())
                 .then(data => {
                   if (data.error) {
-                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                    resultContent.innerHTML = `<div class="status error">${escapeHtml(data.error)}</div>`;
                   } else {
                     resultContent.innerHTML = `<div class="analysis-result">${formatAnalysisResult(data.analysis)}</div>`;
                   }
                 })
                 .catch(error => {
-                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
                 });
               });
               
@@ -311,7 +315,7 @@
                 
                 fetch('/dashboard/content/analyze', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({
                     source_type: 'url',
                     url: customUrl,
@@ -321,13 +325,13 @@
                 .then(response => response.json())
                 .then(data => {
                   if (data.error) {
-                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                    resultContent.innerHTML = `<div class="status error">${escapeHtml(data.error)}</div>`;
                   } else {
                     resultContent.innerHTML = `<div class="analysis-result">${formatAnalysisResult(data.analysis)}</div>`;
                   }
                 })
                 .catch(error => {
-                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
                 });
               });
               
@@ -883,7 +887,7 @@
 
                 fetch('/dashboard/keyword/mindmap', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({ keywords: keywords })
                 })
                 .then(function (response) { return response.json(); })
@@ -945,7 +949,7 @@
               function formatAiKeywordResult(text) {
                 return text
                   .split('\n')
-                  .map(line => line.trim())
+                  .map(line => escapeHtml(line.trim()))
                   .filter(line => line)
                   .map(line => {
                     if (line.startsWith('#')) {
@@ -984,19 +988,19 @@
 
                 fetch('/dashboard/keyword/ai-search', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({ keyword: keyword }),
                 })
                 .then(response => response.json())
                 .then(data => {
                   if (data.error) {
-                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                    resultContent.innerHTML = `<div class="status error">${escapeHtml(data.error)}</div>`;
                   } else {
                     resultContent.innerHTML = `<div class="analysis-result">${formatAiKeywordResult(data.result)}</div>`;
                   }
                 })
                 .catch(error => {
-                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
                 });
               });
             });
@@ -1146,7 +1150,7 @@
                 
                 fetch('/dashboard/custom/summarize', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({
                     source_type: 'text',
                     text: customText,
@@ -1156,14 +1160,14 @@
                 .then(response => response.json())
                 .then(data => {
                   if (data.error) {
-                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                    resultContent.innerHTML = `<div class="status error">${escapeHtml(data.error)}</div>`;
                   } else {
                     const summaryHtml = formatSummary(data.summary);
                     resultContent.innerHTML = `<div class="summary-result">${summaryHtml}</div>`;
                   }
                 })
                 .catch(error => {
-                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
                 });
               });
               
@@ -1188,7 +1192,7 @@
                 
                 fetch('/dashboard/custom/summarize', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                   body: JSON.stringify({
                     source_type: 'url',
                     url: customUrl,
@@ -1198,21 +1202,21 @@
                 .then(response => response.json())
                 .then(data => {
                   if (data.error) {
-                    resultContent.innerHTML = `<div class="status error">${data.error}</div>`;
+                    resultContent.innerHTML = `<div class="status error">${escapeHtml(data.error)}</div>`;
                   } else {
                     const summaryHtml = formatSummary(data.summary);
                     resultContent.innerHTML = `<div class="summary-result">${summaryHtml}</div>`;
                   }
                 })
                 .catch(error => {
-                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+                  resultContent.innerHTML = `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
                 });
               });
 
               function formatSummary(summary) {
                 return summary
                   .split('\n')
-                  .map(line => line.trim())
+                  .map(line => escapeHtml(line.trim()))
                   .filter(line => line)
                   .map(line => {
                     if (line.startsWith('#')) {
@@ -1280,23 +1284,23 @@
           
           document.getElementById('summaryContent').innerHTML = 
             `<div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
-              در حال خلاصه‌سازی ویدیو "${videoTitle}"...
+              در حال خلاصه‌سازی ویدیو "${escapeHtml(videoTitle)}"...
             </div>`;
           
           fetch('/dashboard/youtube/summarize', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ video_id: videoId }),
           })
           .then(response => response.json())
           .then(data => {
             if (data.error) {
               document.getElementById('summaryContent').innerHTML = 
-                `<div class="status error">${data.error}</div>`;
+                `<div class="status error">${escapeHtml(data.error)}</div>`;
             } else {
               const summaryHtml = data.summary
                 .split('\n')
-                .map(line => line.trim())
+                .map(line => escapeHtml(line.trim()))
                 .filter(line => line)
                 .map(line => {
                   if (line.startsWith('#')) {
@@ -1314,7 +1318,7 @@
           })
           .catch(error => {
             document.getElementById('summaryContent').innerHTML = 
-              `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+              `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
           });
         });
       });
@@ -1331,24 +1335,24 @@
           
           document.getElementById('summaryContent').innerHTML = 
             `<div class="loading-spinner" style="text-align: center; padding: 30px; color: var(--text-muted);">
-              در حال خلاصه‌سازی مقاله "${title}"...
+              در حال خلاصه‌سازی مقاله "${escapeHtml(title)}"...
               <br><small style="font-size: 0.8rem; color: var(--text-muted);">این فرآیند ممکن است چند لحظه طول بکشد...</small>
             </div>`;
           
           fetch('/dashboard/article/summarize', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ url: url, title: title }),
           })
           .then(response => response.json())
           .then(data => {
             if (data.error) {
               document.getElementById('summaryContent').innerHTML = 
-                `<div class="status error">${data.error}</div>`;
+                `<div class="status error">${escapeHtml(data.error)}</div>`;
             } else {
               const summaryHtml = data.summary
                 .split('\n')
-                .map(line => line.trim())
+                .map(line => escapeHtml(line.trim()))
                 .filter(line => line)
                 .map(line => {
                   if (line.startsWith('#')) {
@@ -1366,7 +1370,7 @@
           })
           .catch(error => {
             document.getElementById('summaryContent').innerHTML = 
-              `<div class="status error">خطا در ارتباط با سرور: ${error.message}</div>`;
+              `<div class="status error">خطا در ارتباط با سرور: ${escapeHtml(error.message)}</div>`;
           });
         });
       });

@@ -29,8 +29,8 @@
       پس از پایان این بازه، برای ادامه‌ی استفاده از تحلیل محتوا، خلاصه‌ساز، پژوهش کلمات کلیدی و
       سایر امکانات، کافیست یکی از پلن‌های زیر را تهیه کنید.
     </p>
-    <a href="tel:09355650995" class="btn-call-hero">
-      <i class="fas fa-phone"></i> تماس بگیرید: ۰۹۳۵۵۶۵۰۹۹۵
+    <a href="tel:+989355650995" class="btn-call-hero">
+      <i class="fas fa-phone"></i> برای تماس کلیک کنید
     </a>
   </section>
 
@@ -71,6 +71,7 @@
             </span>
           {% else %}
             <form method="POST" action="{{ url_for('cart.add', plan_key='trial_7day') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn-plan-call" style="border: none; cursor: pointer; width: 100%;">
                 <i class="fas fa-cart-plus"></i> افزودن به سبد خرید
               </button>
@@ -93,10 +94,10 @@
           <li><i class="fas fa-circle-check"></i> خلاصه‌ساز هوشمند مقالات و ویدیوها</li>
           <li><i class="fas fa-circle-check"></i> پژوهش یوتیوب، گوگل و DuckDuckGo</li>
           <li><i class="fas fa-circle-check"></i> جستجوی کلمات کلیدی با هوش مصنوعی</li>
-          <li><i class="fas fa-circle-check"></i> پشتیبانی از طریق تیکت</li>
+          <li><i class="fas fa-circle-check"></i> پشتیبانی تلفنی</li>
         </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
+        <a href="tel:+989355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> برای تماس کلیک کنید
         </a>
       </div>
 
@@ -113,8 +114,8 @@
           <li><i class="fas fa-circle-check"></i> اولویت در پردازش درخواست‌ها</li>
           <li><i class="fas fa-circle-check"></i> پشتیبانی اختصاصی</li>
         </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
+        <a href="tel:+989355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> برای تماس کلیک کنید
         </a>
       </div>
 
@@ -129,8 +130,8 @@
           <li><i class="fas fa-circle-check"></i> مشاوره‌ی دوره‌ای استراتژی سئو</li>
           <li><i class="fas fa-circle-check"></i> پشتیبانی و به‌روزرسانی‌های اولویت‌دار</li>
         </ul>
-        <a href="tel:09355650995" class="btn-plan-call">
-          <i class="fas fa-phone"></i> تماس بگیرید
+        <a href="tel:+989355650995" class="btn-plan-call">
+          <i class="fas fa-phone"></i> برای تماس کلیک کنید
         </a>
       </div>
     </div>
@@ -140,8 +141,8 @@
   <div class="services-contact-banner">
     <h2>دوره‌ی رایگان شما تمام شده یا سوالی درباره‌ی پلن‌ها دارید؟</h2>
     <p>همین حالا تماس بگیرید تا حساب شما فعال شود و بدون وقفه به کار با ابزار سئو ادامه دهید.</p>
-    <a href="tel:09355650995" class="btn-hero-primary">
-      <i class="fas fa-phone"></i> تماس بگیرید <span class="phone-number">09355650995</span>
+    <a href="tel:+989355650995" class="btn-hero-primary">
+      <i class="fas fa-phone"></i> برای تماس کلیک کنید
     </a>
   </div>
 

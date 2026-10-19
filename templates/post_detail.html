@@ -34,7 +34,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', '{{ seo_settings.google_analytics_id }}');
+    gtag('config', {{ seo_settings.google_analytics_id|tojson }});
   </script>
   {% endif %}
 

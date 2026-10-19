@@ -104,7 +104,7 @@ def _mangools_related_keywords(api_key: str, keyword: str, location_id: int, lan
             return None, "⏳ سقف رایگان جستجوی کلمات کلیدی Mangools برای امروز به پایان رسیده است."
         return None, f"❌ خطا در دریافت اطلاعات از Mangools (کد {e.code})."
     except Exception as e:
-        return None, f"❌ خطا در ارتباط با Mangools: {str(e)}"
+        return None, "❌ خطا در ارتباط با Mangools؛ لطفاً دوباره تلاش کنید."
 
     raw_keywords = (data or {}).get("keywords", [])[:max_results]
 
@@ -155,7 +155,7 @@ def _keywordseverywhere_related_keywords(api_key: str, keyword: str, max_results
             return None, "⏳ اعتبار (credit) حساب Keywords Everywhere کافی نیست یا این قابلیت نیازمند پلن بالاتری است."
         return None, f"❌ خطا در دریافت اطلاعات از Keywords Everywhere (کد {e.code})."
     except Exception as e:
-        return None, f"❌ خطا در ارتباط با Keywords Everywhere: {str(e)}"
+        return None, "❌ خطا در ارتباط با Keywords Everywhere؛ لطفاً دوباره تلاش کنید."
 
     raw_keywords = (result or {}).get("data", [])[:max_results]
 
@@ -233,4 +233,4 @@ def ai_keyword_research(keyword: str, user) -> str:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: {str(e)}"
+        return f"❌ خطا در برقراری ارتباط با مدل «{model_id}»: خطا ثبت شد؛ لطفاً دوباره تلاش کنید"

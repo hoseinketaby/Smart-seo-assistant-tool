@@ -114,5 +114,5 @@ def checkout():
         return redirect(url_for("dashboard.overview"))
 
     # پلن‌های پولی فعلاً از طریق تماس فعال می‌شوند.
-    flash("برای تکمیل خرید این پلن لطفاً با ما تماس بگیرید: ۰۹۳۵۵۶۵۰۹۹۵", "info")
+    flash("برای تکمیل خرید این پلن، روی «برای تماس کلیک کنید» در صفحه پلن‌ها بزنید.", "info")
     return redirect(url_for("plans"))

@@ -23,9 +23,7 @@ def _mask_key(key: str) -> str:
     """نمایش امن بخشی از کلید API (بدون افشای کامل آن)."""
     if not key:
         return ""
-    if len(key) <= 8:
-        return "•" * len(key)
-    return f"{key[:4]}{'•' * 8}{key[-4:]}"
+    return "•" * 8
 
 
 DEFAULT_KEYS_INFO = {

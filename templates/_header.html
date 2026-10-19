@@ -52,7 +52,7 @@
         <span class="avatar">{{ current_user.email[0]|upper }}</span>
         <span class="chip-label">{{ current_user.email.split('@')[0] }}</span>
       </a>
-      <a href="{{ url_for('auth.logout') }}" class="logout-mini">خروج</a>
+      <form method="POST" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="logout-mini">خروج</button></form>
     {% else %}
       <a href="{{ url_for('auth.login', next=login_next or url_for('dashboard.overview')) }}" class="btn-panel">
         <i class="fas fa-right-to-bracket" aria-hidden="true"></i> ورود به پنل

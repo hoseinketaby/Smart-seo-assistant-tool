@@ -264,7 +264,7 @@ def summarize_custom_text(text: str, prompt: str, user) -> str:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        return f"âŒ Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ù‚Ø±Ø§Ø±ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ù…Ø¯Ù„ Â«{model_id}Â»: {str(e)}"
+        return f"âŒ Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ù‚Ø±Ø§Ø±ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ù…Ø¯Ù„ Â«{model_id}Â»: خطا ثبت شد؛ لطفاً دوباره تلاش کنید"
 
 
 # ==================== ØªØ­Ù„ÛŒÙ„ Ù…Ø­ØªÙˆØ§ (Content Analyzer) ====================
@@ -348,7 +348,7 @@ def analyze_content_text(text: str, prompt: str, user) -> str:
         response = llm.invoke(messages)
         return response.content
     except Exception as e:
-        return f"âŒ Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ù‚Ø±Ø§Ø±ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ù…Ø¯Ù„ Â«{model_id}Â»: {str(e)}"
+        return f"âŒ Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ù‚Ø±Ø§Ø±ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ù…Ø¯Ù„ Â«{model_id}Â»: خطا ثبت شد؛ لطفاً دوباره تلاش کنید"
 
 
 

@@ -14,3 +14,4 @@ langchain-text-splitters
 unstructured
 youtube-transcript-api
 beautifulsoup4
+cryptography

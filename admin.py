@@ -98,12 +98,12 @@ def authenticate_admin(identifier, password):
 def login_admin(admin):
     session["admin_id"] = admin.id
     session.permanent = True
-    session.pop("_admin_csrf_token", None)
+    session.pop("_csrf_token", None)
 
 
 def logout_admin():
     session.pop("admin_id", None)
-    session.pop("_admin_csrf_token", None)
+    session.pop("_csrf_token", None)
 
 
 def admin_required(view):
@@ -118,15 +118,15 @@ def admin_required(view):
 
 
 def _csrf_token():
-    token = session.get("_admin_csrf_token")
+    token = session.get("_csrf_token")
     if not token:
         token = secrets.token_urlsafe(32)
-        session["_admin_csrf_token"] = token
+        session["_csrf_token"] = token
     return token
 
 
 def _require_valid_csrf():
-    expected = session.get("_admin_csrf_token")
+    expected = session.get("_csrf_token")
     submitted = request.form.get("csrf_token", "")
     if not expected or not secrets.compare_digest(expected, submitted):
         abort(400, description="درخواست نامعتبر است. صفحه را تازه‌سازی و دوباره تلاش کنید.")
@@ -294,7 +294,7 @@ def index():
             errors = _validate_admin_fields(username, password, confirm_password)
             required_setup_key = current_app.config.get("ADMIN_SETUP_KEY", "")
 
-            if required_setup_key and not secrets.compare_digest(
+            if not secrets.compare_digest(
                 required_setup_key,
                 request.form.get("setup_key") or "",
             ):

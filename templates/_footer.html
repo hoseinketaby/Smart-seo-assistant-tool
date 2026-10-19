@@ -33,16 +33,16 @@
       <h5>حساب و مدیریت</h5>
       {% if current_admin %}
         <a href="{{ url_for('admin.index') }}">پنل مدیریت</a>
-        <a href="{{ url_for('auth.logout') }}">خروج مدیر</a>
+        <form method="POST" action="{{ url_for('admin.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">خروج مدیر</button></form>
       {% elif current_user.is_authenticated %}
         <a href="{{ url_for('dashboard.overview') }}">پنل کاربری</a>
-        <a href="{{ url_for('auth.logout') }}">خروج</a>
+        <form method="POST" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">خروج</button></form>
       {% else %}
         <a href="{{ url_for('auth.login', next=url_for('dashboard.overview')) }}">ورود کاربران</a>
         <a href="{{ url_for('auth.signup') }}">ثبت‌نام</a>
         <a href="{{ url_for('admin.index') }}">ورود مدیران</a>
       {% endif %}
-      <a href="mailto:support@seo-assistant.example">ایمیل پشتیبانی</a>
+      <a href="tel:+989355650995">برای تماس کلیک کنید</a>
     </div>
   </div>
 

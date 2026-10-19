@@ -329,6 +329,9 @@ a {
   font-size: 0.85rem;
   color: var(--text-muted);
   text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
 .logout-link:hover {
@@ -1329,6 +1332,8 @@ a {
   padding: 8px 14px;
   border-radius: var(--radius-sm);
   transition: color 0.2s, border-color 0.2s;
+  background: transparent;
+  cursor: pointer;
 }
 
 .logout-mini:hover {
@@ -1745,6 +1750,9 @@ a {
 }
 
 .contact-submit {
+  display: block;
+  text-align: center;
+  text-decoration: none;
   margin-top: 22px;
   width: 100%;
   background: var(--accent);
@@ -1760,6 +1768,15 @@ a {
 
 .contact-submit:hover {
   opacity: 0.9;
+}
+
+.footer-col form button {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
 }
 
 .contact-form-note {
